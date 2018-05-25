@@ -2,7 +2,7 @@ from wordnik import *
 import json
 
 apiUrl = 'http://api.wordnik.com/v4'
-apiKey = 'c0706d70c102054fb6a56bb8f070f1895ba309b3140771469'
+apiKey = 
 client = swagger.ApiClient(apiKey, apiUrl)
 
 wordsApi = WordsApi.WordsApi(client)
