@@ -1,4 +1,5 @@
 from datamuse import datamuse
+from wordnik import *
 import json
 
 api = datamuse.Datamuse()
