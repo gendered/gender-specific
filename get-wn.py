@@ -12,17 +12,24 @@ apiUrl = 'http://api.wordnik.com/v4'
 apiKey = os.getenv('API_KEY')
 client = swagger.ApiClient(apiKey, apiUrl)
 wordsApi = WordsApi.WordsApi(client)
-terms = ['woman', 'man', 'female', 'male', 'boy', 'girl', 'women', 'men', 'girls', 'boys']
-dict = dict.fromkeys(terms)
+femaleTerms = ['woman', 'female', 'girl', 'girls', 'women']
+maleTerms = [ 'man', 'male', 'boy', 'men', 'boys']
 
-for term in dict:
-	results = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
+def writeToJson(path, dictionary):
+	with open(path + '.txt', 'w') as outfile:  
+	    json.dump(dictionary, outfile)
+
+def callApi(terms):
 	words = {}
-	for result in results:
-		words[result.word] = result.text
-	dict[term] = words
+	for term in terms:
+		results = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
+		for result in results:
+			words[result.word] = result.text
+	return words
 
-for term in dict:
-	print (len(dict[term]))
-	with open('words/wordnik/' + term + '.txt', 'w') as outfile:  
-	    json.dump(dict[term], outfile)
+femaleDict = callApi(dict.fromkeys(femaleTerms))
+print (len(femaleDict))
+maleDict = callApi(dict.fromkeys(maleTerms))
+print (len(maleDict))
+writeToJson('words/wordnik/female-all', femaleDict)
+writeToJson('words/wordnik/male-all', maleDict)
