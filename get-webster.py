@@ -1,9 +1,6 @@
 import json
 from nltk.corpus import wordnet as wn
 
-with open('data/webster/dictionary.json', 'r') as f:
-	data = json.load(f)
-
 femaleTerms = ['woman', 'female', 'girl', 'girls', 'women']
 maleTerms = [' man ', ' male ', 'boy', ' men ', 'boys']
 
@@ -11,7 +8,7 @@ with open('data/webster/dictionary.json', 'r') as f:
 	results = json.load(f)
 
 def writeToJson(path, dictionary):
-	with open(path + '.txt', 'w') as outfile:  
+	with open(path + '.txt', 'w') as outfile:
 	    json.dump(dictionary, outfile)
 
 def callApi(terms):

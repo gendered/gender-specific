@@ -8,7 +8,7 @@ femaleTerms = ['woman', 'female', 'girl', 'girls', 'women']
 maleTerms = [ 'man', 'male', 'boy', 'men', 'boys']
 
 def writeToJson(path, dictionary):
-	with open(path + '.txt', 'w') as outfile:  
+	with open(path + '.txt', 'w') as outfile:
 	    json.dump(dictionary, outfile)
 
 api = datamuse.Datamuse()
