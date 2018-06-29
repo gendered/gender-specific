@@ -5,124 +5,94 @@ import json
 import os
 from nltk.corpus import wordnet as wn
 import collections
+import jsonpickle
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
 dotenv_path = os.path.join(APP_ROOT, '.env')
 load_dotenv(dotenv_path)
 
-femaleTerms = ['woman', 'female', 'girl', 'girls', 'women']
+femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady']
 maleTerms = [ 'man', 'male', 'boy', 'men', 'boys']
 
-maleAll =  {}
-femaleAll = {}
+maleAll =  set(['woman', 'female', 'girl', 'girls', 'women', 'lady'])
+femaleAll = set(['man', 'male', 'boy', 'men', 'boys'])
 
-def writeToJson(path, dictionary):
-	with open(path + '.txt', 'w') as outfile:
-	    json.dump(dictionary, outfile)
-
-def appendToDictionary(d, super_dict):
-	for k, v in d.items():
-		if (k not in super_dict):
-			super_dict[k] = v
+def writeToJson(path, set):
+	with open(path + '.json', 'w') as outfile:
+	    json.dump(jsonpickle.encode(set, unpicklable=False), outfile)
 
 # wordnik
 apiUrl = 'http://api.wordnik.com/v4'
 apiKey = os.getenv('API_KEY')
 client = swagger.ApiClient(apiKey, apiUrl)
+wordApi = WordApi.WordApi(client)
 
 def getWordnik():
-	wordsApi = WordsApi.WordsApi(client)
+    wordsApi = WordsApi.WordsApi(client)
 
-	def callApi(terms):
-		words = {}
-		for term in terms:
-			results = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
-			for result in results:
-				words[result.word] = result.text
-		return words
+    def callApi(terms):
+        words = []
+        for term in terms:
+            reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
+            for result in reverseDictionary:
+                words.append(result.word)
+        return words
 
-	femaleDict = callApi(dict.fromkeys(femaleTerms))
-	maleDict = callApi(dict.fromkeys(maleTerms))
-
-	appendToDictionary(maleDict, maleAll)
-	appendToDictionary(femaleDict, femaleAll)
-
-	writeToJson('words/wordnik/female-all', femaleDict)
-	writeToJson('words/wordnik/male-all', maleDict)
-	print ('wordnik done')
+    femaleSet = callApi(dict.fromkeys(femaleTerms))
+    maleSet = callApi(dict.fromkeys(maleTerms))
+    femaleAll.update(femaleSet)
+    maleAll.update(maleSet)
+    print ('wordnik done')
 
 # datamuse
 
 def getDatamuse():
+    api = datamuse.Datamuse()
 
-	api = datamuse.Datamuse()
-	wordApi = WordApi.WordApi(client)
+    def callApi(terms):
+        words = []
+        for term in terms:
+            results = api.words(ml=term, max=1000, md='dp')
+            for result in results:
+                # check if it's a noun
+                if ('tags' in result):
+                    if ('n' in result['tags']):
+                        word = result['word']
+                        words.append(word)
+        return words
 
-	def callApi(terms):
-		words = {}
-		for term in terms:
-			results = api.words(ml=term, max=1000, md='dp')
-			for result in results:
-				# check if it's a noun
-				if ('tags' in result):
-					if ('n' in result['tags']):
-						word = result['word']
-						if ('defs' in result):
-							definition = result['defs']
-							words[word] = definition
-						else:
-							# to-do: get definition if it's not there
-							definition = wordApi.getDefinitions(word, partOfSpeech='noun', limit=1)
-							if (definition is not None):
-								words[word] = definition[0].text
-							else:
-								syns = wn.synsets(word)
-								if syns:
-									words[word] = syns[0].definition()
-								else:
-									continue
-		return words
-
-	femaleDict = callApi(dict.fromkeys(femaleTerms))
-	maleDict = callApi(dict.fromkeys(maleTerms))
-
-	appendToDictionary(maleDict, maleAll)
-	appendToDictionary(femaleDict, femaleAll)
-
-	writeToJson('words/datamuse/female-all', femaleDict)
-	writeToJson('words/datamuse/male-all', maleDict)
-
-	print ('datamuse done')
+    femaleSet = callApi(dict.fromkeys(femaleTerms))
+    maleSet = callApi(dict.fromkeys(maleTerms))
+    femaleAll.update(femaleSet)
+    maleAll.update(maleSet)
+    print ('datamuse done')
 
 def getWebster():
-	with open('data/webster/dictionary.json', 'r') as f:
-		results = json.load(f)
+    with open('data/webster/dictionary.json', 'r') as f:
+        results = json.load(f)
 
-	maleTerms = [' man ', ' male ', 'boy', ' men ', 'boys']
+    maleTerms = [' man ', ' male ', 'boy', ' men ', 'boys']
 
-	def callApi(terms):
-		words = {}
-		for term in terms:
-			for result in results:
-				if term in results[result]:
-					# get part of speech
-					for ss in wn.synsets(result):
-						pos = ss.pos()
-						if ('n' in pos):
-							words[result] = results[result]
-		return words
+    def callApi(terms):
+        words = []
+        for term in terms:
+            for result in results:
+                if term in results[result]:
+                    # get part of speech
+                    for ss in wn.synsets(result):
+                        pos = ss.pos()
+                        if ('n' in pos):
+                            words.append(result)
+        return words
 
-	femaleDict = callApi(dict.fromkeys(femaleTerms))
-	maleDict = callApi(dict.fromkeys(maleTerms))
+    femaleSet = callApi(dict.fromkeys(femaleTerms))
+    maleSet = callApi(dict.fromkeys(maleTerms))
+    femaleAll.update(femaleSet)
+    maleAll.update(maleSet)
+    print ('webster done')
 
-	appendToDictionary(maleDict, maleAll)
-	appendToDictionary(femaleDict, femaleAll)
 
-	print ('webster done')
-	writeToJson('words/webster/female-all', femaleDict)
-	writeToJson('words/webster/male-all', maleDict)
-#
 getWebster()
 getWordnik()
 getDatamuse()
