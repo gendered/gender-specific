@@ -12,9 +12,12 @@ load_dotenv(dotenv_path)
 
 with open('words/female-all.json') as f:
     female_all = json.load(f)
+    female_all = jsonpickle.decode(female_all)
+
 
 with open('words/male-all.json') as f:
     male_all = json.load(f)
+    male_all = jsonpickle.decode(male_all)
 
 # wordnik
 apiUrl = 'http://api.wordnik.com/v4'
@@ -39,13 +42,13 @@ def createSets(words, arr):
             results = wordApi.getRelatedWords(word, relationshipTypes='synonym')
             if (results):
                 synonyms = results[0].words
-                synonyms_set.update(synonyms)
+                synonyms_set.extend(synonyms)
                 # wordsInSet.update(synonyms)
                 arr.append(synonyms_set)
 
-def writeToJson(path, dictionary):
+def writeToJson(path, set):
 	with open(path + '.json', 'w') as outfile:
-	    json.dump(dictionary, outfile)
+	    json.dump(jsonpickle.encode(set, unpicklable=False), outfile)
 
 createSets(female_all, femaleAll)
 print (femaleAll)
