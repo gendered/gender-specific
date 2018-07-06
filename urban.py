@@ -5,6 +5,9 @@ import json
 # gendered words = words with any of the below terms in their definition
 femaleTerms = [' woman ', ' female ', ' girl ', ' girls ', ' women ', ' lady ']
 maleTerms = [ ' man ', ' male ', ' boy ', ' men ', ' boys ']
+urban_female = []
+urban_male = []
+unique_words = set([])
 
 def writeToJson(path, list):
 	with open(path + '.json', 'w') as outfile:
@@ -35,9 +38,10 @@ def getUrbanDictionary():
 
     femaleArr = ub[(ub['definition']).str.contains(f_terms, na=False)]
     maleArr = ub[ub['definition'].str.contains(m_terms, na=False)]
-    writeToJson('data/urban/urban-female', femaleArr['word'].tolist())
-    writeToJson('data/urban/urban-male', maleArr['word'].tolist())
+    urban_female.extend(femaleArr['word'].tolist())
+    urban_male.extend(maleArr['word'].tolist())
 
-    # print ('urban dic done')
+    print ('urban dic done')
 
-getUrbanDictionary()
+writeToJson('data/urban/urban-female', urban_female)
+writeToJson('data/urban/urban-male', urban_male)

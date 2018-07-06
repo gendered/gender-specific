@@ -6,10 +6,10 @@ model = KeyedVectors.load_word2vec_format(filename, binary=True)
 pairs_one = []
 pairs_two = []
 
-with open('words/female-all.json') as f:
+with open('words/filtered-female-all.json') as f:
     female_all = json.load(f)
 
-with open('words/male-all.json') as f:
+with open('words/filtered-male-all.json') as f:
     male_all = json.load(f)
 
 def writeToJson(path, arr):
@@ -18,7 +18,7 @@ def writeToJson(path, arr):
 
 def findGenderOpposite(words, gender, arr):
     for word in words:
-        if word in model.wv.vocab:
+        if word in model.vocab:
             if (gender == 'female'):
                 pos = 'man'
                 neg = 'woman'

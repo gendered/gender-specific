@@ -35,15 +35,11 @@ def checkDistance(arr):
             elif m_sim > f_sim and m_sim > 0.1:
                 male_set.add(word)
         else:
-            if word in female_all:
-                female_set.add(word)
-            elif word in male_all:
-                male_set.add(word)
-            else:
                 discard.add(word)
 
 # before we look for pairs, filter out some words that are not gendered
 all = female_all + male_all
+print(len(all))
 # filter out words that are not close enough to gender terms
 checkDistance(all)
 checkDistance(unknown)
