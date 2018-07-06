@@ -154,5 +154,5 @@ getWordnik()
 getDatamuse()
 getGSFull()
 
-writeToJson('words/female-all-unfiltered', femaleAll)
-writeToJson('words/male-all-unfiltered', maleAll)
+writeToJson('words/filtered/female-all-unfiltered', femaleAll)
+writeToJson('words/filtered/male-all-unfiltered', maleAll)
