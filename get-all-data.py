@@ -149,22 +149,10 @@ def getGSFull():
 
 	print ('gender specific done')
 
-def getUrbanDictionary():
-	with open('data/urban/urban-female.json', 'r') as f:
-		male = json.load(f)
-	with open('data/urban/urban-male.json', 'r') as f:
-		female = json.load(f)
-
-	femaleAll.update(female)
-	maleAll.update(male)
-
-	print ('urban dic done')
-
 getWebster()
 getWordnik()
 getDatamuse()
-getUrbanDictionary()
 getGSFull()
 
-writeToJson('words/female-all', femaleAll)
-writeToJson('words/male-all', maleAll)
+writeToJson('words/female-all-unfiltered', femaleAll)
+writeToJson('words/male-all-unfiltered', maleAll)
