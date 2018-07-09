@@ -31,21 +31,21 @@ def writeToJson(path, set):
 def getWordDefinition(word):
 	dictionary=PyDictionary()
 	wordApi = WordApi.WordApi(client)
-	def checkIfValid(def):
-		if isinstance(def, dict) and 'Noun' in definition:
+	def checkIfValid(definition):
+		if isinstance(definition, dict) and 'Noun' in definition:
 			return True
-		elif def is not None:
+		elif definition is not None:
 			return True
 		else:
 			return False
 
 	def getDef(word):
 		definition = dictionary.meaning(word)
-		if (checkIfValid(definition)):
+		if checkIfValid(definition):
 			return definition['Noun']
 		else:
 			definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
-			if checkIfValid(def):
+			if checkIfValid(definition):
 				return definition[0].text
 			else:
 				return ' '
@@ -53,14 +53,15 @@ def getWordDefinition(word):
 	searches = []
 	if '_' in word:
 		searches.extend(word, word.replace('_', ' '), word.replace('_', '-'))
-	if (len(searches) != 0):
-		for (wordToSearch in searches):
-			def = getDef(wordToSearch)
-			if (def is not None and def != ' ')
-				return def
+	if (len(
+	searches) != 0):
+		for wordToSearch in searches:
+			definition = getDef(wordToSearch)
+			if definition is not None and definition != ' ':
+				return definition
 	else:
-		def = getDef(word)
-	return def
+		definition = getDef(word)
+	return definition
 
 def getWordnik():
 	wordsApi = WordsApi.WordsApi(client)
