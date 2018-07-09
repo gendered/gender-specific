@@ -14,20 +14,19 @@ APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to applicatio
 dotenv_path = os.path.join(APP_ROOT, '.env')
 load_dotenv(dotenv_path)
 
+# wordnik api stuff
+apiUrl = 'http://api.wordnik.com/v4'
+apiKey = os.getenv('API_KEY')
+client = swagger.ApiClient(apiKey, apiUrl)
+
+
 femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady']
 maleTerms = [ 'man', 'male', 'boy', 'men', 'boys']
-
-femaleAll =  set(['woman', 'female', 'girl', 'girls', 'women', 'lady'])
-maleAll = set(['man', 'male', 'boy', 'men', 'boys'])
+allWords = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy'])
 
 def writeToJson(path, set):
 	with open(path + '.json', 'w') as outfile:
 	    json.dump(list(set), outfile)
-
-# wordnik
-apiUrl = 'http://api.wordnik.com/v4'
-apiKey = os.getenv('API_KEY')
-client = swagger.ApiClient(apiKey, apiUrl)
 
 def getWordDefinition(word):
 	dictionary=PyDictionary()
@@ -66,12 +65,12 @@ def getWordDefinition(word):
 def getWordnik():
 	wordsApi = WordsApi.WordsApi(client)
 	source = 'wordnik'
-	def callApi(terms, set, gender):
+	def callApi(terms, gender):
 		words = []
 		for term in terms:
 			reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
 			for result in reverseDictionary:
-				if (result not in set):
+				if (result not in allWords):
 					word = result.word.lower()
 					definition = result.text
 					words.append(
@@ -81,12 +80,10 @@ def getWordnik():
 						'gender': gender,
 						'source': source
 					})
-		return words
+		allWords.update(words)
 
-	female = callApi(dict.fromkeys(femaleTerms), femaleAll, 'female')
-	male = callApi(dict.fromkeys(maleTerms), maleAll, 'male')
-	femaleAll.update(female)
-	maleAll.update(male)
+	callApi(dict.fromkeys(femaleTerms), 'female')
+	callApi(dict.fromkeys(maleTerms), 'male')
 	print ('wordnik done')
 
 # datamuse
@@ -94,13 +91,13 @@ def getWordnik():
 def getDatamuse():
 	api = datamuse.Datamuse()
 	source = 'datamuse'
-	def callApi(terms, set, gender):
+	def callApi(terms, gender):
 		words = []
 		for term in terms:
 			results = api.words(ml=term, max=1000, md='dp')
 			for result in results:
 				word = result['word'].lower()
-				if (word not in set):
+				if (word not in allWords):
 					# check if it's a noun
 					if ('tags' in result):
 						if ('n' in result['tags']):
@@ -114,12 +111,10 @@ def getDatamuse():
 								'gender': gender,
 								'source': source
 							})
-		return words
+		allWords.update(words)
 
-	female = callApi(dict.fromkeys(femaleTerms), femaleAll, 'female')
-	male = callApi(dict.fromkeys(maleTerms), maleAll, 'male')
-	femaleAll.update(female)
-	maleAll.update(male)
+	callApi(dict.fromkeys(femaleTerms), 'female')
+	callApi(dict.fromkeys(maleTerms), 'male')
 	print ('datamuse done')
 
 def getWebster():
@@ -127,14 +122,14 @@ def getWebster():
 		results = json.load(f)
 	maleTerms = [' man ', ' male ', 'boy', ' men ', 'boys']
 	source = 'webster'
-	def bucket(terms, set, gender):
+	def bucket(terms, gender):
 		words = []
 		for term in terms:
 			for result in results:
 				definition = results[result]
 				if term in definition:
 					result = result.lower()
-					if (result not in set):
+					if (result not in allWords):
 						# get part of speech
 						for ss in wn.synsets(result):
 							pos = ss.pos()
@@ -146,12 +141,11 @@ def getWebster():
 									'source': source
 								})
 								break
-		return words
+		allWords.update(words)
 
-	female = bucket(dict.fromkeys(femaleTerms), femaleAll, 'female')
-	male = bucket(dict.fromkeys(maleTerms), maleAll,'male')
-	femaleAll.update(female)
-	maleAll.update(male)
+
+	bucket(dict.fromkeys(femaleTerms), 'female')
+	bucket(dict.fromkeys(maleTerms), 'male')
 	print ('webster done')
 
 def getGSFull():
@@ -160,11 +154,11 @@ def getGSFull():
 
 	# all words in this file are gendered, so put the ones we can't get definitions for
 	# in a separate file we will address later
-	def bucket(terms, set):
+	def bucket(terms, gender):
 		words = []
 		for result in results:
 			result = result.lower()
-			if (result not in set):
+			if (result not in allWords):
 				definition = getWordDefinition(result)
 				if (definition is not None and definition != ' '):
 					hasGenderedTerm = False
@@ -189,12 +183,10 @@ def getGSFull():
 						'definition': '',
 						'gender': 'unknown'
 					})
-		return words
+		allWords.update(words)
 
-	female = bucket(dict.fromkeys(femaleTerms), femaleAll, 'female')
-	male = bucket(dict.fromkeys(maleTerms), maleAll, 'male')
-	femaleAll.update(female)
-	maleAll.update(male)
+	bucket(dict.fromkeys(femaleTerms), 'female')
+	bucket(dict.fromkeys(maleTerms), 'male')
 	print ('gender specific done')
 
 getWebster()
@@ -202,5 +194,4 @@ getWordnik()
 getDatamuse()
 getGSFull()
 
-writeToJson('words/filtered/female-all-unfiltered', femaleAll)
-writeToJson('words/filtered/male-all-unfiltered', maleAll)
+writeToJson('words/filtered/all-unfiltered', allWords)
