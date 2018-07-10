@@ -8,6 +8,9 @@ import collections
 from PyDictionary import PyDictionary
 import pandas as pd
 import urbandictionary as ud
+import requests
+from wiktionaryparser import WiktionaryParser
+import io
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
@@ -22,37 +25,52 @@ client = swagger.ApiClient(apiKey, apiUrl)
 
 femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady']
 maleTerms = [ 'man', 'male', 'boy', 'men', 'boys']
-allWords = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy'])
+allWords = []
+wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy'])
+discard = []
 
 def writeToJson(path, set):
 	with open(path + '.json', 'w') as outfile:
 	    json.dump(list(set), outfile)
 
 def getWordDefinition(word):
-	dictionary=PyDictionary()
-	wordApi = WordApi.WordApi(client)
-	def checkIfValid(definition):
-		if isinstance(definition, dict) and 'Noun' in definition:
-			return True
-		elif definition is not None:
-			return True
-		else:
-			return False
 
 	def getDef(word):
+		dictionary=PyDictionary()
 		definition = dictionary.meaning(word)
-		if checkIfValid(definition):
+		if isinstance(definition, dict) and 'Noun' in definition:
 			return definition['Noun']
-		else:
-			definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
-			if checkIfValid(definition):
-				return definition[0].text
-			else:
+
+		# wordnik dictionary
+		wordApi = WordApi.WordApi(client)
+		definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
+		if definition is not None:
+			return definition[0].text
+
+		try:
+			# owlbot api
+			url = 'https://owlbot.info/api/v2/dictionary/' + word
+			r = requests.get(url)
+			result = (r.json())[0]
+			if (result.type == 'noun' and result.definition):
+				return result.definition
+		except:
+			try:
+				# wiktionary
+				parser = WiktionaryParser()
+				result = parser.fetch(word)
+				if (result):
+					definitions = result[0].definitions[0]
+					if definition.partOfSpeech == 'noun':
+						return definition.text
+			except KeyboardInterrupt:
+				raise
+			except:
 				return ' '
 
 	searches = []
 	if '_' in word:
-		searches.extend(word, word.replace('_', ' '), word.replace('_', '-'))
+		searches.extend([word, word.replace('_', ' '), word.replace('_', '-')])
 	if (len(
 	searches) != 0):
 		for wordToSearch in searches:
@@ -71,8 +89,9 @@ def getWordnik():
 		for term in terms:
 			reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
 			for result in reverseDictionary:
-				if (result not in allWords):
+				if (result not in wordSet):
 					word = result.word.lower()
+					wordSet.add(word)
 					definition = result.text
 					words.append(
 					{
@@ -81,7 +100,7 @@ def getWordnik():
 						'gender': gender,
 						'tags': [source],
 					})
-		allWords.update(words)
+		allWords.extend(words)
 
 	callApi(dict.fromkeys(femaleTerms), 'female')
 	callApi(dict.fromkeys(maleTerms), 'male')
@@ -98,7 +117,7 @@ def getDatamuse():
 			results = api.words(ml=term, max=1000, md='dp')
 			for result in results:
 				word = result['word'].lower()
-				if (word not in allWords):
+				if (word not in wordSet):
 					# check if it's a noun
 					if ('tags' in result):
 						if ('n' in result['tags']):
@@ -106,13 +125,17 @@ def getDatamuse():
 								definition = result['defs']
 							else:
 								definition = getWordDefinition(word)
-							words.append({
-								'word': word,
-								'definition': definition,
-								'gender': gender,
-								'tags': [source]
-							})
-		allWords.update(words)
+							if (definition != ' '):
+								wordSet.add(word)
+								words.append({
+									'word': word,
+									'definition': definition,
+									'gender': gender,
+									'tags': [source]
+								})
+							else:
+								discard.append(result)
+		allWords.extend(words)
 
 	callApi(dict.fromkeys(femaleTerms), 'female')
 	callApi(dict.fromkeys(maleTerms), 'male')
@@ -130,20 +153,20 @@ def getWebster():
 				definition = results[result]
 				if term in definition:
 					result = result.lower()
-					if (result not in allWords):
+					if (result not in wordSet):
 						# get part of speech
 						for ss in wn.synsets(result):
 							pos = ss.pos()
 							if ('n' in pos):
+								wordSet.add(result)
 								words.append({
-									'word': word,
+									'word': result,
 									'definition': definition,
 									'gender': gender,
 									'tags': [source]
 								})
 								break
-		allWords.update(words)
-
+		allWords.extend(words)
 
 	bucket(dict.fromkeys(femaleTerms), 'female')
 	bucket(dict.fromkeys(maleTerms), 'male')
@@ -159,7 +182,7 @@ def getGSFull():
 		words = []
 		for result in results:
 			result = result.lower()
-			if (result not in allWords):
+			if (result not in wordSet):
 				definition = getWordDefinition(result)
 				if (definition is not None and definition != ' '):
 					hasGenderedTerm = False
@@ -167,25 +190,21 @@ def getGSFull():
 						if (term in definition):
 							hasGenderedTerm = True
 							words.append({
-								'word': word,
+								'word': result,
 								'definition': definition,
 								'gender': gender
 							})
 							break
 					if (hasGenderedTerm == False):
 						words.append({
-							'word': word,
+							'word': result,
 							'definition': definition,
 							'gender': 'unknown'
 						})
 				else:
-					words.append({
-						'word': word,
-						'definition': '',
-						'gender': 'unknown'
-					})
-		allWords.update(words)
-
+					discard.append(result)
+				wordSet.add(result)
+		allWords.extend(words)
 	bucket(dict.fromkeys(femaleTerms), 'female')
 	bucket(dict.fromkeys(maleTerms), 'male')
 	print ('gender specific done')
@@ -217,23 +236,41 @@ def getUrbanDictionary():
 	def addToArray(ub, gender):
 		words = []
 		for index, row in ub.iterrows():
-			words.append({
-				'word': row['word'],
-				'definition': row['definition'],
-				'tags': [source],
-				'gender': gender
-			})
-		allWords.update(words)
+			word = row['word']
+			if (word not in wordSet):
+				wordSet.add(word)
+				words.append({
+					'word': word,
+					'definition': row['definition'],
+					'tags': [source],
+					'gender': gender
+				})
+		allWords.extend(words)
 
 
 	addToArray(ub[(ub['definition']).str.contains(f_terms, na=False)], 'female')
 	addToArray(ub[ub['definition'].str.contains(m_terms, na=False)], 'male')
 	print ('urban dic done')
 
+def addTerms(terms, gender):
+	for word in terms:
+		definition = getWordDefinition(word)
+		wordSet.add(word)
+		allWords.append({
+			'word': word,
+			'definition': definition,
+			'gender': gender,
+			'source': 'wordnik'
+		})
+
+addTerms(['woman', 'girl', 'lady'], 'female')
+addTerms(['man', 'boy'], 'male')
 getWebster()
 getWordnik()
 getDatamuse()
 getUrbanDictionary()
 getGSFull()
 
-writeToJson('words/filtered/all-unfiltered', allWords)
+print (allWords)
+writeToJson('words/unfiltered/discard', discard)
+writeToJson('words/unfiltered/all-unfiltered', allWords)
