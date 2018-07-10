@@ -27,7 +27,6 @@ femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady']
 maleTerms = [ 'man', 'male', 'boy', 'men', 'boys']
 allWords = []
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy'])
-discard = []
 
 def writeToJson(path, set):
 	with open(path + '.json', 'w') as outfile:
@@ -89,8 +88,8 @@ def getWordnik():
 		for term in terms:
 			reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
 			for result in reverseDictionary:
-				if (result not in wordSet):
-					word = result.word.lower()
+				word = result.word.lower()
+				if (word not in wordSet):
 					wordSet.add(word)
 					definition = result.text
 					words.append(
@@ -133,8 +132,6 @@ def getDatamuse():
 									'gender': gender,
 									'tags': [source]
 								})
-							else:
-								discard.append(result)
 		allWords.extend(words)
 
 	callApi(dict.fromkeys(femaleTerms), 'female')
@@ -201,8 +198,6 @@ def getGSFull():
 							'definition': definition,
 							'gender': 'unknown'
 						})
-				else:
-					discard.append(result)
 				wordSet.add(result)
 		allWords.extend(words)
 	bucket(dict.fromkeys(femaleTerms), 'female')
@@ -271,6 +266,4 @@ getDatamuse()
 getUrbanDictionary()
 getGSFull()
 
-print (allWords)
-writeToJson('words/unfiltered/discard', discard)
 writeToJson('words/unfiltered/all-unfiltered', allWords)
