@@ -1,13 +1,10 @@
 import json
-from gensim.models import KeyedVectors
-filename = 'GoogleNews-vectors-negative300-SLIM.bin'
+from gensim.models import KeyedVectors, word2vec
+filename = 'GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
 
 with open('words/unfiltered/all-unfiltered.json') as f:
     all_words = json.load(f)
-
-with open('words/discard.json') as f:
-    discard = json.load(f)
 
 def writeToJson(path, arr):
 	with open(path + '.json', 'w') as outfile:
@@ -23,8 +20,9 @@ def checkDistance(arr):
     newArr = []
     for entry in arr:
         word = entry['word']
-        tags = entry['tags']
         gender = entry['gender']
+        if ('tags' in entry):
+            tags = entry['tags']
         if word in model.vocab:
             f_sim = model.similarity(word, f_term)
             m_sim = model.similarity(word, m_term)
