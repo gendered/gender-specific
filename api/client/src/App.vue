@@ -5,8 +5,18 @@
       <router-link to="/about">About</router-link>
     </div>
     <router-view/>
+    <SearchFilter></SearchFilter>
   </div>
 </template>
+
+<script>
+  import SearchFilter from '@/components/SearchFilter'
+  export default {
+    components: {
+      SearchFilter
+    },
+  }
+</script>
 
 <style lang="scss">
 #app {

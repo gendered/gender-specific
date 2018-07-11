@@ -1,30 +1,30 @@
 <template>
   <div class="home">
-    <ul v-if="words && words.length">
-       <li v-for="word of words">
-         <span>{{word.word}}</span>
-       </li>
-     </ul>
+     <WordList></WordList>
+     <FilterPanel :options="tags"></FilterPanel>
+     <FilterPanel :options="sex"></FilterPanel>
   </div>
 </template>
 
 <script>
-const API = 'http://localhost:3000/api/words';
+  import WordList from '@/components/WordList'
+  import FilterPanel from '@/components/FilterPanel'
 
-export default {
-  name: 'home',
-  data() {
-    return {
-      words: [],
-    }
-  },
-  created() {
-    fetch(API)
-    .then(res => res.json())
-    .then(res => this.words = res);
-  },
-};
+  export default {
+    name: 'Home',
+    components: {
+      WordList,
+      FilterPanel
+    },
+    data() {
+      return {
+        tags: ['urban', 'webster', 'wordnik'],
+        sex: ['female', 'male'],
+      }
+    },
+  }
 </script>
+
 <style lang="scss">
   ul {
     display: flex;
