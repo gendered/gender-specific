@@ -10,8 +10,8 @@ def writeToJson(path, arr):
 	with open(path + '.json', 'w') as outfile:
 	    json.dump(arr, outfile)
 
-discard = set([])
-not_strong = set([])
+discard = []
+not_strong = []
 all = []
 
 def checkDistance(arr):
@@ -27,8 +27,8 @@ def checkDistance(arr):
             f_sim = model.similarity(word, f_term)
             m_sim = model.similarity(word, m_term)
             if (f_sim < 0.1 and m_sim < 0.1):
-                not_strong.add(word)
-                break
+                not_strong.append(entry)
+                continue
             elif f_sim > 0.1 and f_sim > m_sim:
                 entry['gender'] = 'female'
             elif m_sim > f_sim and m_sim > 0.1:
@@ -36,13 +36,15 @@ def checkDistance(arr):
             newArr.append(entry)
         else:
             if tags and 'urban' not in tags:
-                discard.add(word)
-                print(word)
+                discard.append(entry)
             else:
                 newArr.append(entry)
     all.extend(newArr)
 
 checkDistance(all_words)
 writeToJson('words/discard', list(discard))
+print(len(discard))
 writeToJson('words/not_strong', list(not_strong))
+print(len(not_strong))
 writeToJson('words/all', all)
+print(len(all))

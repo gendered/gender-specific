@@ -10,7 +10,7 @@ APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to applicatio
 dotenv_path = os.path.join(APP_ROOT, '.env')
 load_dotenv(dotenv_path)
 
-with open('words/female-all.json') as f:
+with open('words/unfiltered/all.json') as f:
     female_all = json.load(f)
     female_all = jsonpickle.decode(female_all)
 
