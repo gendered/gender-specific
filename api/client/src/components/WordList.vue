@@ -9,19 +9,8 @@
 </template>
 
 <script>
-const API = 'http://localhost:3000/api/words';
-
 export default {
   name: 'WordList',
-  data() {
-    return {
-      words: [],
-    }
-  },
-  created() {
-    fetch(API)
-    .then(res => res.json())
-    .then(res => this.words = res);
-  },
+  props: ['words'],
 };
 </script>

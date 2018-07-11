@@ -1,14 +1,15 @@
 <template>
   <div class="home">
-     <WordList></WordList>
-     <FilterPanel :options="tags"></FilterPanel>
-     <FilterPanel :options="sex"></FilterPanel>
+     <FilterPanel :options="tags" v-on:filter="handleFilter"></FilterPanel>
+     <FilterPanel :options="sex" v-on:filter="handleFilter"></FilterPanel>
+     <WordList v-bind:words="filtered"></WordList>
   </div>
 </template>
 
 <script>
   import WordList from '@/components/WordList'
   import FilterPanel from '@/components/FilterPanel'
+  const API = 'http://localhost:3000/api/words';
 
   export default {
     name: 'Home',
@@ -18,10 +19,95 @@
     },
     data() {
       return {
-        tags: ['urban', 'webster', 'wordnik'],
-        sex: ['female', 'male'],
+        activeFilters: [],
+        tags: [
+          {
+            'name': 'tag',
+            'type': 'urban',
+          },
+          {
+            'name': 'tag',
+            'type': 'wordnik',
+          },
+          {
+            'name': 'tag',
+            'type': 'webster',
+          },
+          {
+            'name': 'tag',
+            'type': 'datamuse',
+          },
+        ],
+        sex: [
+          {
+            'name': 'sex',
+            'type': 'female'
+          },
+          {
+            'name': 'sex',
+            'type': 'male'
+          }
+        ],
+        words: [],
       }
     },
+    created() {
+      fetch(API)
+      .then(res => res.json())
+      .then(res => this.words = res);
+    },
+    computed: {
+      filtered () {
+        var filtered = this.words;
+        this.activeFilters.forEach(filter => {
+          filtered = filtered.filter(entry => {
+            switch (filter.name) {
+              case 'sex':
+                return entry['gender'] === filter.type;
+                break
+              case 'tag':
+                if (entry['tags']) {
+                  console.log(entry['tags'], filter.type)
+                  return entry['tags'].includes(filter.type);
+                }
+                break;
+            }
+          });
+        });
+        return filtered;
+      }
+    },
+    methods: {
+      handleFilter(option) {
+        let activeFilters = this.activeFilters;
+        let index = -1;
+        const name = option.name;
+        const type = option.type;
+        let obj = {
+          'name': name,
+          'type': type
+        };
+        // if it's not you can add or remove
+        if (activeFilters) {
+          index = this.activeFilters.indexOf(obj);
+          if (index === -1) {
+            this.addFilter(obj);
+          }
+          else {
+            this.removeFilter(index);
+          }
+        }
+        else {
+          this.addFilter(obj);
+        }
+      },
+      addFilter(option) {
+        this.activeFilters.push(option);
+      },
+      removeFilter(idx) {
+        this.activeFilters.splice(idx, 1);
+      }
+    }
   }
 </script>
 
