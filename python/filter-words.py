@@ -35,7 +35,7 @@ def checkDistance(arr):
                 entry['gender'] = 'male'
             newArr.append(entry)
         else:
-            if 'urban' not in tags:
+            if tags and 'urban' not in tags:
                 discard.add(word)
                 print(word)
             else:
