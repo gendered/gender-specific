@@ -20,7 +20,7 @@ export default new Router({
       component: About,
     },
     {
-     path: '/words/:id',
+     path: '/words/:word',
      name: 'word',
      component: WordSet,
      props: true

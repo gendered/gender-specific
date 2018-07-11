@@ -2,7 +2,7 @@
   <div class="word-list">
     <ul v-if="words && words.length">
        <li v-for="word of words">
-         <a :href="'./words/' + word.id">{{word.word}}</a>
+         <a :href="'./words/' + word.word">{{word.word}}</a>
        </li>
      </ul>
   </div>
