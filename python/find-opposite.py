@@ -6,7 +6,7 @@ model = KeyedVectors.load_word2vec_format(filename, binary=True)
 with open('words/all.json') as f:
     all = json.load(f)
 
-all_words_only = [entry.word for entry in all]
+all_words_only = [entry['word'] for entry in all]
 
 def writeToJson(path, arr):
 	with open(path + '.json', 'w') as outfile:
@@ -34,4 +34,4 @@ def findGenderOpposite(words):
 
 
 findGenderOpposite(all)
-writeToJson('words/all-pairs.json', pairs)
+writeToJson('words/all-pairs', all)

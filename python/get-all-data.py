@@ -269,7 +269,7 @@ addTerms(['man', 'boy'], 'male')
 getWebster()
 getWordnik()
 getDatamuse()
-getUrbanDictionary()
+# getUrbanDictionary()
 getGSFull()
 
 writeToJson('words/unfiltered/all-unfiltered', allWords)
