@@ -16,5 +16,9 @@
   "word": {
     "dataSource": "db",
     "public": true
+  },
+  "word-set": {
+    "dataSource": "db",
+    "public": true
   }
 }

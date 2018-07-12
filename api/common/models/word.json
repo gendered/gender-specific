@@ -37,6 +37,11 @@
     "gender-opposite": {
       "type": "hasOne",
       "model": "word"
+    },
+    "word-set": {
+      "type": "belongsTo",
+      "model": "word-set",
+      "foreignKey": ""
     }
   },
   "acls": [],
