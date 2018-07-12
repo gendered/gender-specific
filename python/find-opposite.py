@@ -1,11 +1,12 @@
 import json
 from gensim.models import KeyedVectors
-filename = 'GoogleNews-vectors-negative300-SLIM.bin'
+filename = 'GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
 
-pairs = []
-with open('words/filtered/all.json') as f:
+with open('words/all.json') as f:
     all = json.load(f)
+
+all_words_only = [entry.word for entry in all]
 
 def writeToJson(path, arr):
 	with open(path + '.json', 'w') as outfile:
@@ -23,8 +24,14 @@ def findGenderOpposite(words):
                 pos = 'woman'
                 neg = 'man'
             result = model.most_similar(positive=[pos, word], negative=[neg], topn=1)
-            pairs.append([word, result])
+            if result is not None:
+                result = result[0]
+                opp_word = result[0]
+                score = result[1]
+                if opp_word in all_words_only and score > 0.5:
+                    entry['opposite'] = opp_word
+
+
 
 findGenderOpposite(all)
-writeToJson('words/female-pairs', female_pairs)
-findGenderOpposite(male_all, 'male', pairs_two)
+writeToJson('words/all-pairs.json', pairs)

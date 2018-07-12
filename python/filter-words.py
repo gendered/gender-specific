@@ -43,8 +43,5 @@ def checkDistance(arr):
 
 checkDistance(all_words)
 writeToJson('words/discard', list(discard))
-print(len(discard))
 writeToJson('words/not_strong', list(not_strong))
-print(len(not_strong))
 writeToJson('words/all', all)
-print(len(all))
