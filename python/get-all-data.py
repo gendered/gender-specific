@@ -89,16 +89,19 @@ def getWordnik():
 			reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
 			for result in reverseDictionary:
 				word = result.word.lower()
+				definition = result.text
 				if (word not in wordSet):
-					wordSet.add(word)
-					definition = result.text
-					words.append(
-					{
-						'word': word,
-						'definition': definition,
-						'gender': gender,
-						'tags': [source],
-					})
+					for term in terms:
+						if term in definition:
+							wordSet.add(word)
+							words.append(
+							{
+								'word': word,
+								'definition': definition,
+								'gender': gender,
+								'tags': [source],
+							})
+							break
 		allWords.extend(words)
 
 	callApi(dict.fromkeys(femaleTerms), 'female')
@@ -125,13 +128,16 @@ def getDatamuse():
 							else:
 								definition = getWordDefinition(word)
 							if (definition != ' '):
-								wordSet.add(word)
-								words.append({
-									'word': word,
-									'definition': definition,
-									'gender': gender,
-									'tags': [source]
-								})
+								for term in terms:
+									if term in definition:
+										wordSet.add(word)
+										words.append({
+											'word': word,
+											'definition': definition,
+											'gender': gender,
+											'tags': [source]
+										})
+										break
 		allWords.extend(words)
 
 	callApi(dict.fromkeys(femaleTerms), 'female')
