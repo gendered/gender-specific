@@ -23,13 +23,13 @@
       }
     },
     created() {
-      const w = this.word;
-      let obj = { "where": { "word": w } };
-      const url = `${API}findOne?filter${obj}`
+      let obj = JSON.stringify({ "where": { "word": this.word } });
+      const url = `${API}findOne?filter=${obj}`
       fetch(url)
       .then(res => res.json())
       .then((res) => {
         console.log(res);
+        this.data = res;
       });
     },
   };
