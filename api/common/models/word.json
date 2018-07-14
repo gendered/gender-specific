@@ -28,20 +28,24 @@
       "type": "string",
       "required": true
     },
-    "gender-opposite": {
+    "opposite": {
       "type": "string"
     }
   },
   "validations": [],
   "relations": {
-    "gender-opposite": {
-      "type": "hasOne",
-      "model": "word"
-    },
     "word-set": {
       "type": "belongsTo",
       "model": "word-set",
       "foreignKey": ""
+    },
+    "gender-opposite": {
+      "type": "hasOne",
+      "model": "word",
+      "foreignKey": "opposite",
+      "options": {
+        "nestRemoting": true
+      }
     }
   },
   "acls": [],
