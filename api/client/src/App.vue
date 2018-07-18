@@ -4,6 +4,7 @@
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link>
       <SearchFilter></SearchFilter>
+      <input type="button" v-on:click="getRandom" value="Get Random Word" />
     </div>
     <router-view/>
   </div>
@@ -13,7 +14,12 @@
   import SearchFilter from '@/components/SearchFilter'
   export default {
     components: {
-      SearchFilter
+      SearchFilter,
     },
+    methods: {
+      getRandom() {
+        alert('get random!');
+      },
+    }
   }
 </script>

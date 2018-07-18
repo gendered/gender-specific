@@ -1,8 +1,8 @@
 <template>
   <div>
     <section :class="'word-set ' + data.gender">
-      <span>{{ data.word }}</span>
-      <span>{{ data.definition }}</span>
+      <span>{{ entry.word }}</span>
+      <span>{{ entry.definition }}</span>
     </section>
     <!-- <section :class="'word-set ' + word.gender">
       <span>{{ word.word }}</span>
@@ -19,7 +19,8 @@
     props: ['word'],
     data() {
       return {
-        data: {},
+        entry: {},
+        entryOpposite: {}
       }
     },
     created() {
@@ -29,8 +30,11 @@
       .then(res => res.json())
       .then((res) => {
         console.log(res);
-        this.data = res;
-      });
+        this.entry = res;
+      })
+      .then(() => {
+        let genderOpposite = this.entry.opposite;
+      })
     },
   };
 </script>
