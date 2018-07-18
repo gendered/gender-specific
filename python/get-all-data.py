@@ -11,6 +11,7 @@ import urbandictionary as ud
 import requests
 from wiktionaryparser import WiktionaryParser
 import io
+from nltk.stem import *
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
@@ -23,10 +24,10 @@ apiKey = os.getenv('API_KEY')
 client = swagger.ApiClient(apiKey, apiUrl)
 
 
-femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady']
-maleTerms = [ 'man', 'male', 'boy', 'men', 'boys']
+femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady', 'mother', 'daughter']
+maleTerms = [ 'man', 'male', 'boy', 'men', 'boys', 'son', 'father']
 allWords = []
-wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy'])
+wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
 
 def writeToJson(path, set):
 	with open(path + '.json', 'w') as outfile:
@@ -43,6 +44,7 @@ def getWordDefinition(word):
 		# wordnik dictionary
 		wordApi = WordApi.WordApi(client)
 		definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
+
 		if definition is not None:
 			return definition[0].text
 
@@ -70,8 +72,7 @@ def getWordDefinition(word):
 	searches = []
 	if '_' in word:
 		searches.extend([word, word.replace('_', ' '), word.replace('_', '-')])
-	if (len(
-	searches) != 0):
+	if (len(searches) != 0):
 		for wordToSearch in searches:
 			definition = getDef(wordToSearch)
 			if definition is not None and definition != ' ':
