@@ -147,6 +147,7 @@ def getDatamuse():
 def getWebster():
 	with open('data/webster/dictionary.json', 'r') as f:
 		results = json.load(f)
+	femaleTerms = [' woman ', ' female ', ' girl ', ' girls ', ' women ', ' lady ']
 	maleTerms = [' man ', ' male ', 'boy', ' men ', 'boys']
 	source = 'webster'
 	def bucket(terms, gender):
