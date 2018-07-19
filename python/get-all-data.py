@@ -12,6 +12,7 @@ import requests
 from wiktionaryparser import WiktionaryParser
 import io
 from nltk.stem import *
+import re
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
@@ -23,9 +24,13 @@ apiUrl = 'http://api.wordnik.com/v4'
 apiKey = os.getenv('API_KEY')
 client = swagger.ApiClient(apiKey, apiUrl)
 
+femaleTermsArr = ['woman', 'female', 'girl', 'lady', 'women', 'mother', 'daughter', 'wife']
+femaleTerms = '\bwoman\b|\bfemale\b|\bgirl\b|\bgirls\b|\bwomen\b|\blady\b|\bmother\b|\bdaughter\b|\bwife\b'
+femaleRegex = re.compile(femaleTerms)
 
-femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady', 'mother', 'daughter']
-maleTerms = [ 'man', 'male', 'boy', 'men', 'boys', 'son', 'father']
+maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
+maleTerms = '\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\bfather\b|\bhusband\b'
+maleRegex = re.compile(maleTerms)
 allWords = []
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
 
@@ -39,7 +44,7 @@ def getWordDefinition(word):
 		dictionary=PyDictionary()
 		definition = dictionary.meaning(word)
 		if isinstance(definition, dict) and 'Noun' in definition:
-			return definition['Noun']
+			return definition['Noun'][0]
 
 		# wordnik dictionary
 		wordApi = WordApi.WordApi(client)
@@ -84,7 +89,7 @@ def getWordDefinition(word):
 def getWordnik():
 	wordsApi = WordsApi.WordsApi(client)
 	source = 'wordnik'
-	def callApi(terms, gender):
+	def callApi(terms, pattern, gender):
 		words = []
 		for term in terms:
 			reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
@@ -92,21 +97,20 @@ def getWordnik():
 				word = result.word.lower()
 				definition = result.text
 				if (word not in wordSet):
-					for term in terms:
-						if term in definition:
-							wordSet.add(word)
-							words.append(
-							{
-								'word': word,
-								'definition': definition,
-								'gender': gender,
-								'tags': [source],
-							})
-							break
+					termsInString = pattern.search(definition)
+					if termsInString is not None:
+						wordSet.add(word)
+						words.append(
+						{
+							'word': word,
+							'definition': definition,
+							'gender': gender,
+							'tags': [source],
+						})
 		allWords.extend(words)
 
-	callApi(dict.fromkeys(femaleTerms), 'female')
-	callApi(dict.fromkeys(maleTerms), 'male')
+	callApi(femaleTermsArr, femaleRegex, 'female')
+	callApi(maleTermsArr, maleRegex, 'male')
 	print ('wordnik done')
 
 # datamuse
@@ -114,7 +118,7 @@ def getWordnik():
 def getDatamuse():
 	api = datamuse.Datamuse()
 	source = 'datamuse'
-	def callApi(terms, gender):
+	def callApi(terms, pattern, gender):
 		words = []
 		for term in terms:
 			results = api.words(ml=term, max=1000, md='dp')
@@ -129,52 +133,51 @@ def getDatamuse():
 							else:
 								definition = getWordDefinition(word)
 							if (definition != ' '):
-								for term in terms:
-									if term in definition:
-										wordSet.add(word)
-										words.append({
-											'word': word,
-											'definition': definition,
-											'gender': gender,
-											'tags': [source]
-										})
-										break
+								termsInString = pattern.search(definition)
+								if termsInString is not None:
+									wordSet.add(word)
+									words.append({
+										'word': word,
+										'definition': definition,
+										'gender': gender,
+										'tags': [source]
+									})
 		allWords.extend(words)
 
-	callApi(dict.fromkeys(femaleTerms), 'female')
-	callApi(dict.fromkeys(maleTerms), 'male')
+	callApi(femaleTermsArr, femaleRegex, 'female')
+	callApi(maleTermsArr, maleRegex, 'male')
 	print ('datamuse done')
 
 def getWebster():
 	with open('data/webster/dictionary.json', 'r') as f:
 		results = json.load(f)
-	femaleTerms = [' woman ', ' female ', ' girl ', ' girls ', ' women ', ' lady ']
-	maleTerms = [' man ', ' male ', 'boy', ' men ', 'boys']
 	source = 'webster'
-	def bucket(terms, gender):
+	def bucket(pattern, gender):
 		words = []
-		for term in terms:
-			for result in results:
-				definition = results[result]
-				if term in definition:
-					result = result.lower()
-					if (result not in wordSet):
-						# get part of speech
-						for ss in wn.synsets(result):
-							pos = ss.pos()
-							if ('n' in pos):
-								wordSet.add(result)
-								words.append({
-									'word': result,
-									'definition': definition,
-									'gender': gender,
-									'tags': [source]
-								})
-								break
+		for result in results:
+			# to-do: strip definition if it's too long
+			definition = results[result]
+			termsInString = pattern.search(definition)
+			if termsInString is not None:
+				result = result.lower()
+				if (result not in wordSet):
+					# get part of speech
+					for ss in wn.synsets(result):
+						pos = ss.pos()
+						if ('n' in pos):
+							wordSet.add(result)
+							words.append({
+								'word': result,
+								'definition': definition,
+								'gender': gender,
+								'tags': [source]
+							})
+							break
+
 		allWords.extend(words)
 
-	bucket(dict.fromkeys(femaleTerms), 'female')
-	bucket(dict.fromkeys(maleTerms), 'male')
+	bucket(femaleRegex, 'female')
+	bucket(maleRegex, 'male')
 	print ('webster done')
 
 def getGSFull():
@@ -183,33 +186,24 @@ def getGSFull():
 
 	# all words in this file are gendered, so put the ones we can't get definitions for
 	# in a separate file we will address later
-	def bucket(terms, gender):
+	def bucket(pattern, gender):
 		words = []
 		for result in results:
 			result = result.lower()
 			if (result not in wordSet):
 				definition = getWordDefinition(result)
 				if (definition is not None and definition != ' '):
-					hasGenderedTerm = False
-					for term in terms:
-						if (term in definition):
-							hasGenderedTerm = True
-							words.append({
-								'word': result,
-								'definition': definition,
-								'gender': gender
-							})
-							break
-					if (hasGenderedTerm == False):
+					termsInString = pattern.search(definition)
+					if termsInString is not None:
 						words.append({
 							'word': result,
 							'definition': definition,
-							'gender': 'unknown'
+							'gender': gender
 						})
-				wordSet.add(result)
+						wordSet.add(result)
 		allWords.extend(words)
-	bucket(dict.fromkeys(femaleTerms), 'female')
-	bucket(dict.fromkeys(maleTerms), 'male')
+	bucket(femaleRegex, 'female')
+	bucket(maleRegex, 'male')
 	print ('gender specific done')
 
 def getUrbanDictionary():
@@ -233,9 +227,6 @@ def getUrbanDictionary():
 	# remove duplicates
 	ub = ub[~ub[['word']].apply(lambda x: x.str.lower().str.replace(" ","")).duplicated()]
 
-	f_terms = '|'.join([str(x) for x in femaleTerms])
-	m_terms = '|'.join([str(x) for x in maleTerms])
-
 	def addToArray(ub, gender):
 		words = []
 		for index, row in ub.iterrows():
@@ -251,8 +242,8 @@ def getUrbanDictionary():
 		allWords.extend(words)
 
 
-	addToArray(ub[(ub['definition']).str.contains(f_terms, na=False)], 'female')
-	addToArray(ub[ub['definition'].str.contains(m_terms, na=False)], 'male')
+	addToArray(ub[(ub['definition']).str.contains(femaleTerms, na=False)], 'female')
+	addToArray(ub[ub['definition'].str.contains(maleTerms, na=False)], 'male')
 	print ('urban dic done')
 
 def addTerms(terms, gender):
@@ -266,12 +257,12 @@ def addTerms(terms, gender):
 			'source': 'wordnik'
 		})
 
-addTerms(['woman', 'girl', 'lady'], 'female')
-addTerms(['man', 'boy'], 'male')
+addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
 getWebster()
 getWordnik()
 getDatamuse()
-# getUrbanDictionary()
 getGSFull()
+# getUrbanDictionary()
 
 writeToJson('words/unfiltered/all-unfiltered', allWords)

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section :class="'word-set ' + data.gender">
+    <section :class="'word-set ' + entry.gender">
       <span>{{ entry.word }}</span>
       <span>{{ entry.definition }}</span>
     </section>
