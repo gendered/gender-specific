@@ -80,7 +80,7 @@ export default {
       };
       // if it's not you can add or remove
       if (activeFilters) {
-        index = this.activeFilters.indexOf(obj);
+        index = this.activeFilters.findIndex(i => i.name === option.name);
         if (index === -1) {
           this.addFilter(obj);
         }
