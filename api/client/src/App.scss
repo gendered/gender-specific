@@ -4,17 +4,40 @@ html, body {
   font-family: "helvetica neue", Arial, sans-serif;
 }
 
+.filter-options {
+  
+  ul {
+    /*max-width: 60%;*/
+    padding: 0;
+  }
+  li {
+    margin: 0;
+  }
+  input {
+    border-radius: 0;
+    font-size: 1.25rem;
+    border: 1px solid black;
+    padding: 1rem;
+    transition: all 0.1s;
+  }
+  input:hover {
+    color: white;
+    background-color: black;
+  }
+}
+
 .word-list { 
   font-size: 2.5rem;
   font-weight: 400;
+  font-family: garamond;
 
   a {
     text-decoration: none;
-    color: rgb(62,62,62);
+    color: black;
   }
-  
+
   a:hover {
-    border-bottom: 2px solid rgb(62,62,62);
+    border-bottom: 2px solid black;
   }
 
   ul {
@@ -29,15 +52,15 @@ html, body {
 
 
 #nav {
-  font-family: garamond;
+  
   font-size: 2rem;
   padding: 1rem;
   a {
     text-decoration: none;
     font-weight: bold;
-    color: rgb(62,62,62);
+    color: black;
     &.router-link-exact-active {
-      border-bottom: 2px solid rgb(62,62,62);
+      border-bottom: 2px solid black;
     }
   }
   input {
