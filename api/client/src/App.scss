@@ -4,6 +4,8 @@ html, body {
   font-family: "helvetica neue", Arial, sans-serif;
 }
 
+
+
 .filter-options {
   
   ul {
@@ -52,12 +54,14 @@ html, body {
 
 
 #nav {
-  
   font-size: 2rem;
   padding: 1rem;
+
+  
   a {
     text-decoration: none;
     font-weight: bold;
+    margin-right: 1.5rem;
     color: black;
     &.router-link-exact-active {
       border-bottom: 2px solid black;
