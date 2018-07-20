@@ -24,7 +24,7 @@ def filterWords(arr):
         definition = entry['definition']
         if ('tags' in entry):
             tags = entry['tags']
-        if not isThereAnimal(definition):
+        if not isThereAnimal(definition) and not hasWordsToExclude(['hormone', 'animal']):
             if isRightStructure(definition):
                 if word in model.vocab:
                     sims = checkDistance(entry)
@@ -46,29 +46,36 @@ def filterWords(arr):
                     else:
                         newArr.append(entry)
 
+    def hasWordsToExclude(arr, definition):
+        for item in arr:
+            if item in definition:
+                return True
+        return False
+
     # remove entries with animals in definition
     def isThereAnimal(definition):
-        foundAnimal = False
         for animal in animals:
             animal = animal.lower()
             if animal in definition:
                 return True
         return False
 
-    def checkSentenceStructure():
+    def checkSentenceStructure(definition):
+        # part of speech tagger
+        text = word_tokenize(definition)
+        nltk.pos_tag(text)
 
-
-    def checkDistance(entry):
-        f_term = 'woman'
-        m_term = 'man'
-        word = entry['word']
-        gender = entry['gender']
-        f_sim = model.similarity(word, f_term)
-        m_sim = model.similarity(word, m_term)
-        return {
-            'f_sim': f_sim,
-            'm_sim': m_sim
-        }
+    # def checkDistance(entry):
+    #     f_term = 'woman'
+    #     m_term = 'man'
+    #     word = entry['word']
+    #     gender = entry['gender']
+    #     f_sim = model.similarity(word, f_term)
+    #     m_sim = model.similarity(word, m_term)
+    #     return {
+    #         'f_sim': f_sim,
+    #         'm_sim': m_sim
+    #     }
 
 # mentions of animal in definition
 # any animal in definition
