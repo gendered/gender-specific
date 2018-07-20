@@ -46,7 +46,7 @@ export default {
     fetch(API)
     .then(res => res.json())
     .then((res) => {
-      this.words = this.sort(res)
+      this.words = this.alphabetize(res);
     });
   },
   computed: {
@@ -71,12 +71,25 @@ export default {
     }
   },
   methods: {
-    sort(arr) {
-      return arr.sort(function(a, b){
-        if (a.word < b.word) return -1;
-        if (a.word > b.word) return 1;
-        return 0;
+    alphabetize(data) {
+      let obj = {};
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i]
+        const letter = item.word[0].toUpperCase();
+        if(!obj[letter]) {
+          obj[letter] = [item];
+        } else {
+          obj[letter].push(item);
+        }
+      }
+      return this.sort(obj);
+    },
+    sort(unordered) {
+      const ordered = {};
+      Object.keys(unordered).sort().forEach(function(key) {
+        ordered[key] = unordered[key];
       });
+      return ordered;
     },
     handleFilter(option) {
       let activeFilters = this.activeFilters;

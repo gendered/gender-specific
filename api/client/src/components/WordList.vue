@@ -1,8 +1,13 @@
 <template>
   <div class="word-list">
-    <ul v-if="words && words.length">
-       <li v-for="word of words">
-         <a :href="'./words/' + word.word" :class="'word ' + word.gender">{{word.word}}</a>
+    <ul>
+       <li v-for="(value, key) in words">
+          <span>{{key}}</span>
+          <ul v-for="word in value">
+            <li>
+              <a :href="'./words/' + word.word" :class="'word ' + word.gender">{{word.word}}</a>
+            </li>
+          </ul>
        </li>
      </ul>
   </div>
