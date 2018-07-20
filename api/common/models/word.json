@@ -41,11 +41,7 @@
     },
     "gender-opposite": {
       "type": "hasOne",
-      "model": "word",
-      "foreignKey": "opposite",
-      "options": {
-        "nestRemoting": true
-      }
+      "model": "word"
     }
   },
   "acls": [],

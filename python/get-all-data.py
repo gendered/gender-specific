@@ -52,8 +52,6 @@ def getWordDefinition(word):
 			defs = definition['Noun']
 			if isinstance(defs, list) and len(defs) > 0:
 				return defs[0]
-			else:
-				return defs['Noun']
 
 		# wordnik dictionary
 		wordApi = WordApi.WordApi(client)

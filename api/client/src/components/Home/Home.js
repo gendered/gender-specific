@@ -45,7 +45,9 @@ export default {
   created() {
     fetch(API)
     .then(res => res.json())
-    .then(res => this.words = res);
+    .then((res) => {
+      this.words = this.sort(res)
+    });
   },
   computed: {
     filtered () {
@@ -69,6 +71,13 @@ export default {
     }
   },
   methods: {
+    sort(arr) {
+      return arr.sort(function(a, b){
+        if (a.word < b.word) return -1;
+        if (a.word > b.word) return 1;
+        return 0;
+      });
+    },
     handleFilter(option) {
       let activeFilters = this.activeFilters;
       let index = -1;
