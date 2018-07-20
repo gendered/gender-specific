@@ -37,6 +37,9 @@ maleRegex = re.compile(maleTerms)
 allWords = []
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
 
+with open('data/animals.json') as f:
+    animals = json.load(f)
+
 def writeToJson(path, set):
 	with open(path + '.json', 'w') as outfile:
 	    json.dump(list(set), outfile)
@@ -122,17 +125,22 @@ def filterWordByDefinition(definition, startIndex, endIndex):
 		# part of speech tagger
 		text = word_tokenize(cleanDefinition)
 		tags = nltk.pos_tag(text)
-		print('before', tags)
 		# filter adjectives and adverbs
 		tags = [tag for tag in tags if 'JJ' not in tag[1] and 'RB' not in tag[1]]
 		# gendered term is the last in the string so it'll be the last in the array
 		length = len(tags)
 		# so the term before will be at this location
 		# check if it's a preposition or verb before gendered term
-		termOne = tags[length-2][1]
-		termTwo = tags[length-3][1]
-		if termOne == 'IN' or 'VB' in termOne or termTwo == 'IN' or 'VB' in termTwo:
-			return False
+		if length <= 1:
+			return True
+		else:
+			termOne = tags[length-2][1]
+			if termOne == 'IN' or 'VB' in termOne:
+				return False
+			if length > 2:
+				termTwo = tags[length-3][1]
+				if termTwo == 'IN' or 'VB' in termTwo:
+					return False
 		return True
 
 	if not isThereAnimal() and not hasWordsToExclude() and sentenceIsRightStructure():
@@ -337,4 +345,4 @@ getDatamuse()
 getGSFull()
 # getUrbanDictionary()
 
-# writeToJson('words/unfiltered/all-unfiltered', allWords)
+writeToJson('words/unfiltered/all-unfiltered', allWords)
