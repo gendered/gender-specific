@@ -50,22 +50,25 @@ export default {
     });
   },
   computed: {
-    filtered () {
-      var filtered = this.words;
-      this.activeFilters.forEach(filter => {
-        filtered = filtered.filter(entry => {
-          switch (filter.name) {
-            case 'sex':
-              return entry['gender'] === filter.type;
-              break
-            case 'tag':
-              if (entry['tags']) {
-                console.log(entry['tags'], filter.type)
-                return entry['tags'].includes(filter.type);
-              }
-              break;
-          }
-        });
+    filteredWords () {
+      var filtered = Object.assign({}, this.words);
+      var activeFilters = this.activeFilters;
+      activeFilters.forEach(option => {
+        for (let letter in filtered) {
+          const words = filtered[letter];
+          filtered[letter] = words.filter(function(entry) {
+            switch (option.name) {
+              case 'sex':
+                return entry['gender'] === option.type;
+                break
+              case 'tag':
+                if (entry['tags']) {
+                  return entry['tags'].includes(option.type);
+                }
+                break;
+            }
+          });
+        }
       });
       return filtered;
     }

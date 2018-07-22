@@ -3,7 +3,7 @@
      <FilterPanel :options="tags" v-on:filter="handleFilter"></FilterPanel>
      <FilterPanel :options="sex" v-on:filter="handleFilter"></FilterPanel>
      <keep-alive>
-        <WordList v-bind:words="filtered"></WordList>
+        <WordList v-bind:words="filteredWords"></WordList>
      </keep-alive>
   </div>
 </template>
