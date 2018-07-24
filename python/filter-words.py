@@ -3,12 +3,6 @@ from gensim.models import KeyedVectors, word2vec
 filename = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
 
-# from gensim.scripts.glove2word2vec import glove2word2vec
-# glove_input_file = "models/glove.txt"
-# word2vec_output_file = "models/word2vec.txt"
-# glove2word2vec(glove_input_file, word2vec_output_file)
-# m = KeyedVectors.load_word2vec_format(word2vec_output_file, binary=False)
-
 with open('words/unfiltered/all-unfiltered.json') as f:
     all_words = json.load(f)
 
@@ -46,7 +40,6 @@ def filterWords(arr):
                 sims = checkDistance(word)
                 f_sim = sims['f_sim']
                 m_sim = sims['m_sim']
-
                 if (f_sim < 0.1 and m_sim < 0.1):
                     not_strong.append(entry)
                     continue
@@ -60,6 +53,5 @@ def filterWords(arr):
                 all.append(entry)
 
 filterWords(all_words)
-print('google news vectors', len(not_strong))
 writeToJson('words/not_strong', not_strong)
 writeToJson('words/all', all)

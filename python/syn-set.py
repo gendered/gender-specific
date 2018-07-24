@@ -3,7 +3,7 @@ import os
 from pprint import pprint
 from vocabulary.vocabulary import Vocabulary as vb
 
-with open('words/all.json') as f:
+with open('words/all-1.json') as f:
     all = json.load(f)
 
 allSets = []
@@ -13,7 +13,7 @@ def writeToJson(path, set):
 	    json.dump(jsonpickle.encode(set, unpicklable=False), outfile)
 
 def getSynonyms(word):
-    synonyms = vb.synonym(word.decode('utf-8'))
+    synonyms = vb.synonym(word)
     if isinstance(synonyms, list):
         synonyms = json.loads(synonyms)
         return [synonym['text'] for synonym in synonyms]
@@ -23,6 +23,7 @@ def getSynonyms(word):
 def createSets(words):
     for entry in words:
         word = entry['word']
+        print(word)
         # create set with word
         synonyms_set = set([word])
         synonyms = getSynonyms(word)
