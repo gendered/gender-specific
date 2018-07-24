@@ -1,11 +1,11 @@
 import json
 from gensim.models import KeyedVectors, word2vec
-filename = 'GoogleNews-vectors-negative300.bin'
+filename = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
 
 
 from gensim.scripts.glove2word2vec import glove2word2vec
-glove_input_file = "glove.txt"
+glove_input_file = "models/glove.txt"
 word2vec_output_file = "word2vec.txt"
 glove2word2vec(glove_input_file, word2vec_output_file)
 m = KeyedVectors.load_word2vec_format(word2vec_output_file, binary=False)
