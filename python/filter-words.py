@@ -2,10 +2,6 @@ import json
 from gensim.models import KeyedVectors, word2vec
 filename = 'GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
-import nltk
-import csv
-import numpy as np
-import pandas as pd
 
 
 with open('words/unfiltered/all-unfiltered.json') as f:
@@ -15,7 +11,6 @@ def writeToJson(path, arr):
 	with open(path + '.json', 'w') as outfile:
 	    json.dump(arr, outfile)
 
-discard = []
 not_strong = []
 all = []
 
@@ -54,11 +49,6 @@ def filterWords(arr):
             'm_sim': m_sim
         }
 
-
-femaleTerms = ['woman', 'female', 'girl', 'girls', 'women', 'lady']
-maleTerms = [ 'man', 'male', 'boy', 'men', 'boys', 'son', 'father', 'husband']
-
-
 filterWords(all_words)
-writeToJson('words/not_strong', list(not_strong))
+writeToJson('words/not_strong', not_strong)
 writeToJson('words/all', all)
