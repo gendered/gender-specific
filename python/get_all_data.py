@@ -45,10 +45,12 @@ with open('words/unfiltered.json') as f:
   allWords = json.load(f)
   wordSet = set(o.word for entry in allWords)
 
+# writes to a json file
 def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
       json.dump(list(set), outfile)
 
+# tries to get word definition from a bunch of dictionary APIs
 def getWordDefinition(word):
   def getDef(word):
     dictionary=PyDictionary()
@@ -87,6 +89,7 @@ def getWordDefinition(word):
         return ' '
 
   searches = []
+  # for example, look for beauty_queen, beauty-queen, beauty queen.
   if '_' in word:
     searches.extend([word, word.replace('_', ' '), word.replace('_', '-')])
   if (len(searches) != 0):
@@ -99,6 +102,7 @@ def getWordDefinition(word):
   return definition
 
 def filterWordByDefinition(definition, startIndex, endIndex):
+    # remove word with any of these terms 
     def hasWordsToExclude():
         arr = r'\bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|\bman or woman\b'
         rgex = re.compile(arr)
@@ -120,13 +124,14 @@ def filterWordByDefinition(definition, startIndex, endIndex):
         translator = str.maketrans('', '', string.punctuation)
         return sentence.translate(translator)
 
-     def filterTags(tags):
-        new_tags = []
-        for item in tags:
-            word = item[0]
-            if word != 'a' and word != 'an' and word != 'the':
-                new_tags.append(item)
-        return new_tags
+    # ignore 'the', 'a' and 'an'
+    def filterTags(tags):
+      new_tags = []
+      for item in tags:
+          word = item[0]
+          if word != 'a' and word != 'an' and word != 'the':
+              new_tags.append(item)
+      return new_tags
 
     def anyExceptions(definition, tags):
         exceptions = 'name of|applied to|given to|term for'
@@ -155,6 +160,7 @@ def filterWordByDefinition(definition, startIndex, endIndex):
             if not anyExceptions(definition, tags):
                 posOne = tags[length-2][1]
                 termOne = tags[length-2][0]
+                # gendered term should not be the object of a preposition
                 if posOne == 'IN':
                     return False
                 if termOne == 'being'
@@ -167,19 +173,19 @@ def filterWordByDefinition(definition, startIndex, endIndex):
             else:
                 return True
 
-
-
     if not isThereAnimal() and not hasWordsToExclude() and sentenceIsRightStructure():
         return True
     else:
         return False
 
+# check if the word is one of these gendered words or has a mention of them
 def getWordPattern(gender):
     if gender == 'female':
         return re.compile(r'\b[\w-]*woman\b|\b[\w-]girl\b|\bgirls\b|\b[\w-]*women\b|\blady\b|\b[\w-]*mother\b|\b[\w-]*daughter\b|\bwife\b')
     else:
         return re.compile(r'\b[\w-]*man\b|\b[\w-]*boy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b')
 
+# get words from wordnik
 def getWordnik():
   wordsApi = WordsApi.WordsApi(client)
   source = 'wordnik'
@@ -228,7 +234,6 @@ def getWordnik():
   print ('wordnik done')
 
 # datamuse
-
 def getDatamuse():
   api = datamuse.Datamuse()
   source = 'datamuse'
