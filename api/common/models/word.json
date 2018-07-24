@@ -28,7 +28,7 @@
       "type": "string",
       "required": true
     },
-    "opposite": {
+    "equivalent": {
       "type": "string"
     }
   },
@@ -39,7 +39,7 @@
       "model": "word-set",
       "foreignKey": ""
     },
-    "gender-opposite": {
+    "gender-equivalent": {
       "type": "hasOne",
       "model": "word"
     }

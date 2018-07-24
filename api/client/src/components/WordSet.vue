@@ -33,7 +33,7 @@
         this.entry = res;
       })
       .then(() => {
-        let genderOpposite = this.entry.opposite;
+        let genderEquivalent = this.entry.equivalent;
       })
     },
   };

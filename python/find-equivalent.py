@@ -87,7 +87,7 @@ def findGenderEquivalent(word, gender):
                 opp_word = result[0]
                 score = result[1]
                 if opp_word in all_words_only and score > 0.6:
-                    entry['opposite'] = opp_word
+                    entry['equivalent'] = opp_word
     
     for term in wordOpposites:
         if term == 'word':
@@ -103,6 +103,6 @@ for entry in all:
     gender = entry['gender']
     genderOpp = findGenderEquivalent(word, gender)
     if genderOpp ! = ' ':
-        entry['opposite'] = genderOpp
+        entry['equivalent'] = genderOpp
 
 writeToJson('words/all-pairs', all)
