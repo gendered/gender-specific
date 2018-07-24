@@ -84,10 +84,10 @@ def findGenderEquivalent(word, gender):
             result = model.most_similar(positive=[pos, word], negative=[neg], topn=1)
             if result is not None:
                 result = result[0]
-                opp_word = result[0]
+                equivalent = result[0]
                 score = result[1]
-                if opp_word in all_words_only and score > 0.6:
-                    entry['equivalent'] = opp_word
+                if equivalent in all_words_only and score > 0.6:
+                    entry['equivalent'] = equivalent
     
     for term in wordOpposites:
         if term == 'word':
@@ -101,8 +101,8 @@ defineWordEquivalent()
 for entry in all:
     word = entry['word']
     gender = entry['gender']
-    genderOpp = findGenderEquivalent(word, gender)
-    if genderOpp ! = ' ':
-        entry['equivalent'] = genderOpp
+    equiv = findGenderEquivalent(word, gender)
+    if genderOpp != ' ':
+        entry['equivalent'] = equiv
 
 writeToJson('words/all-pairs', all)
