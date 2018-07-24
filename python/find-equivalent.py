@@ -1,7 +1,7 @@
 import json
-from gensim.models import KeyedVectors
-filename = 'GoogleNews-vectors-negative300.bin'
-model = KeyedVectors.load_word2vec_format(filename, binary=True)
+# from gensim.models import KeyedVectors
+# filename = 'GoogleNews-vectors-negative300.bin'
+# model = KeyedVectors.load_word2vec_format(filename, binary=True)
 import re
 from dotenv import load_dotenv
 from wordnik import *
@@ -19,6 +19,12 @@ client = swagger.ApiClient(apiKey, apiUrl)
 # open files
 with open('words/all.json') as f:
     all = json.load(f)
+
+femaleTerms = r'\b[\w-]*woman\b|\bfemale\b|\b[\w-]girl\b|\bgirls\b|\b[\w-]*women\b|\blady\b|\b[\w-]*mother\b|\b[\w-]*daughter\b|\bwife\b'
+femaleRegex = re.compile(femaleTerms)
+
+maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b'
+maleRegex = re.compile(maleTerms)
 
 all_words_only = [entry['word'] for entry in all]
 wordOpposites = {}
@@ -86,8 +92,27 @@ def findGenderEquivalent(word, gender):
                 result = result[0]
                 equivalent = result[0]
                 score = result[1]
-                if equivalent in all_words_only and score > 0.6:
-                    entry['equivalent'] = equivalent
+                if score > 0.6:
+                    if equivalent in all_words_only:
+                        return equivalent
+                    else:
+                        definition = getWordDefinition(equivalent)
+                        if definition != ' ':
+                            if gender == 'female':
+                                opp_gender = 'male'
+                                termsInString = maleRegex.search(definition)
+                            else:
+                                opp_gender = 'female'
+                                termsInString = femaleRegex.search(definition)
+                            if termsInString is not None:
+                                 all.append({
+                                    'word': equivalent,
+                                    'definition': definition,
+                                    'gender': opp_gender
+                                })
+                        return equivalent
+        return ' '
+
     
     for term in wordOpposites:
         if term == 'word':
@@ -95,7 +120,7 @@ def findGenderEquivalent(word, gender):
     equiv = checkWordForEquivalent()
     if equiv != ' ':
         return equiv
-    getGoogleNews()
+    # getGoogleNews()
 
 defineWordEquivalent()
 for entry in all:

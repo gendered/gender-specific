@@ -41,9 +41,9 @@ with open('data/animals.json') as f:
   animals = json.load(f)
   animals = ("|".join(r'\b' + animal.lower() + r'\b' for animal in animals))
 
-with open('words/unfiltered.json') as f:
+with open('words/unfiltered/all-unfiltered.json') as f:
   allWords = json.load(f)
-  wordSet = set(o.word for entry in allWords)
+  wordSet = set(entry['word'] for entry in allWords)
 
 # writes to a json file
 def writeToJson(path, set):
@@ -163,12 +163,12 @@ def filterWordByDefinition(definition, startIndex, endIndex):
                 # gendered term should not be the object of a preposition
                 if posOne == 'IN':
                     return False
-                if termOne == 'being'
+                if termOne == 'being':
                     return False
                 if length >= 2:
                     posTwo = tags[length-3][1]
                     if posTwo == 'IN':
-                    return False
+                      return False
                 return True
             else:
                 return True
@@ -453,5 +453,5 @@ getDatamuse()
 getGSFull()
 # getUrbanDictionary()
 
-writeToJson('words/unfiltered/all-unfiltered', allWords)
-writeToJson('words/unfiltered/discard', discard)
+# writeToJson('words/unfiltered/all-unfiltered', allWords)
+# writeToJson('words/unfiltered/discard', discard)
