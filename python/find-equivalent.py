@@ -1,13 +1,14 @@
 import json
-# from gensim.models import KeyedVectors
-# filename = 'GoogleNews-vectors-negative300.bin'
-# model = KeyedVectors.load_word2vec_format(filename, binary=True)
+from gensim.models import KeyedVectors
+filename = 'GoogleNews-vectors-negative300.bin'
+model = KeyedVectors.load_word2vec_format(filename, binary=True)
 import re
 from dotenv import load_dotenv
 from wordnik import *
 import collections
 from PyDictionary import PyDictionary
 import requests
+import os
 from wiktionaryparser import WiktionaryParser
 from get_all_data import getWordDefinition
 
@@ -76,7 +77,7 @@ def findGenderEquivalent(word, gender):
                     'gender': opp_gender
                 })
                 return equivalent
-            return ' '
+        return ' '
 
 
     def getGoogleNews():      
@@ -120,14 +121,15 @@ def findGenderEquivalent(word, gender):
     equiv = checkWordForEquivalent()
     if equiv != ' ':
         return equiv
-    # getGoogleNews()
+    getGoogleNews()
 
-defineWordEquivalent()
-for entry in all:
-    word = entry['word']
-    gender = entry['gender']
-    equiv = findGenderEquivalent(word, gender)
-    if genderOpp != ' ':
-        entry['equivalent'] = equiv
+if __name__ == "__find-equivalent__":
+    defineWordEquivalent()
+    for entry in all:
+        word = entry['word']
+        gender = entry['gender']
+        equiv = findGenderEquivalent(word, gender)
+        if equiv != ' ' and equiv is not None:
+            entry['equivalent'] = equiv
 
-writeToJson('words/all-pairs', all)
+    writeToJson('words/all-pairs', all)

@@ -445,13 +445,15 @@ def addTerms(terms, gender):
         'source': 'wordnik'
       })
 
-addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-getWordnik()
-getWebster()
-getDatamuse()
-getGSFull()
-# getUrbanDictionary()
+if __name__ == "__get_all_data__":
+   # stuff only to run when not called via 'import' here
+  addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+  addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+  getWordnik()
+  getWebster()
+  getDatamuse()
+  getGSFull()
+  # getUrbanDictionary()
 
-# writeToJson('words/unfiltered/all-unfiltered', allWords)
-# writeToJson('words/unfiltered/discard', discard)
+  writeToJson('words/unfiltered/all-unfiltered', allWords)
+  writeToJson('words/unfiltered/discard', discard)
