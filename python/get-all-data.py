@@ -99,14 +99,13 @@ def getWordDefinition(word):
   return definition
 
 def filterWordByDefinition(definition, startIndex, endIndex):
-  def hasWordsToExclude():
-    arr = r'\bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|\bman or woman\b'
-    rgex = re.compile(animals)
-    termInDef = rgex.search(definition)
-    if termInDef is not None:
-        return True
-    return False
-
+    def hasWordsToExclude():
+        arr = r'\bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|\bman or woman\b'
+        rgex = re.compile(arr)
+        termInDef = rgex.search(definition)
+        if termInDef is not None:
+            return True
+        return False
 
     # remove entries with animals in definition
     def isThereAnimal():
@@ -115,21 +114,37 @@ def filterWordByDefinition(definition, startIndex, endIndex):
         if animalInDef is not None:
             return True
         return False
-
+        
     def preprocess(sentence):
         sentence = sentence.lower()
         translator = str.maketrans('', '', string.punctuation)
         return sentence.translate(translator)
 
+     def filterTags(tags):
+        new_tags = []
+        for item in tags:
+            word = item[0]
+            if word != 'a' and word != 'an' and word != 'the':
+                new_tags.append(item)
+        return new_tags
+
+    def anyExceptions(definition, tags):
+        exceptions = 'name of|applied to|given to|term for'
+        rgex = re.compile(exceptions)
+        termInDef = rgex.search(definition)
+        if termInDef is not None:
+            return True
+        return False
+
     def sentenceIsRightStructure():
         # trim
         trimmedDefinition = definition[0:endIndex]
         # remove a and an
-        defs = re.sub(r'\ba\b|\ban\b|\bthe\b', '', trimmedDefinition)
-        cleanDefinition = preprocess(defs)
+        cleanDefinition = preprocess(trimmedDefinition)
         # part of speech tagger
         text = word_tokenize(cleanDefinition)
-        tags = nltk.pos_tag(text)
+        tags = filterTags(nltk.pos_tag(text))
+
         # gendered term is the last in the string so it'll be the last in the array
         length = len(tags)
         # so the term before will be at this location
@@ -137,15 +152,21 @@ def filterWordByDefinition(definition, startIndex, endIndex):
         if length <= 1:
             return True
         else:
-            posOne = tags[length-2][1]
-            termOne = tags[length-2][0]
-            if termOne == 'to':
-                if length > 2:
-                    if tags[length-3][0] == 'given' or tags[length-3][0] == 'applied':
-                        return True
-            if posOne == 'IN' or 'VB' in posOne:
-                return False
-            return True
+            if not anyExceptions(definition, tags):
+                posOne = tags[length-2][1]
+                termOne = tags[length-2][0]
+                if posOne == 'IN':
+                    return False
+                if termOne == 'being'
+                    return False
+                if length >= 2:
+                    posTwo = tags[length-3][1]
+                    if posTwo == 'IN':
+                    return False
+                return True
+            else:
+                return True
+
 
 
     if not isThereAnimal() and not hasWordsToExclude() and sentenceIsRightStructure():
@@ -419,12 +440,12 @@ def addTerms(terms, gender):
         'source': 'wordnik'
       })
 
-# addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-# addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-# getWordnik()
-# getWebster()
-# getDatamuse()
-# getGSFull()
+addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+getWordnik()
+getWebster()
+getDatamuse()
+getGSFull()
 # getUrbanDictionary()
 
 writeToJson('words/unfiltered/all-unfiltered', allWords)
