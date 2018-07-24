@@ -3,6 +3,10 @@ from gensim.models import KeyedVectors, word2vec
 filename = 'GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
 import nltk
+import csv
+import numpy as np
+import pandas as pd
+
 
 with open('words/unfiltered/all-unfiltered.json') as f:
     all_words = json.load(f)
@@ -16,7 +20,6 @@ not_strong = []
 all = []
 
 def filterWords(arr):
-    newArr = []
     for entry in arr:
         definition = entry['definition']
         if ('tags' in entry):
@@ -31,15 +34,13 @@ def filterWords(arr):
                     continue
                 elif f_sim > 0.1 and f_sim > m_sim:
                     entry['gender'] = 'female'
-                    newArr.append(entry)
+                    all.append(entry)
                 elif m_sim > f_sim and m_sim > 0.1:
                     entry['gender'] = 'male'
-                    newArr.append(entry)
+                    all.append(entry)
             else:
-                if tags and 'urban-dic' not in tags:
-                    discard.append(entry)
-                else:
-                    newArr.append(entry)
+                all.append(entry)
+
 
     def checkDistance(entry):
         f_term = 'woman'
@@ -59,6 +60,5 @@ maleTerms = [ 'man', 'male', 'boy', 'men', 'boys', 'son', 'father', 'husband']
 
 
 filterWords(all_words)
-writeToJson('words/discard', list(discard))
 writeToJson('words/not_strong', list(not_strong))
 writeToJson('words/all', all)

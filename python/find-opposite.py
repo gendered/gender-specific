@@ -35,3 +35,5 @@ def findGenderOpposite(words):
 
 findGenderOpposite(all)
 writeToJson('words/all-pairs', all)
+
+'woman|man|father|mother|wife|husband|ess|ette'

@@ -34,11 +34,16 @@ femaleRegex = re.compile(femaleTerms)
 maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
 maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b'
 maleRegex = re.compile(maleTerms)
-allWords = []
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
+discard = []
 
 with open('data/animals.json') as f:
-    animals = json.load(f)
+  animals = json.load(f)
+  animals = ("|".join(r'\b' + animal.lower() + r'\b' for animal in animals))
+
+with open('words/unfiltered.json') as f:
+  allWords = json.load(f)
+  wordSet = set(o.word for entry in allWords)
 
 def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
@@ -94,19 +99,21 @@ def getWordDefinition(word):
   return definition
 
 def filterWordByDefinition(definition, startIndex, endIndex):
-    def hasWordsToExclude():
-        arr = ['hormone', 'sperm', 'animal', 'organ', 'male or female', 'man or woman']
-        for item in arr:
-            if item in definition:
-                return True
-        return False
+  def hasWordsToExclude():
+    arr = r'\bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|\bman or woman\b'
+    rgex = re.compile(animals)
+    termInDef = rgex.search(definition)
+    if termInDef is not None:
+        return True
+    return False
+
 
     # remove entries with animals in definition
     def isThereAnimal():
-        for animal in animals:
-            animal = animal.lower()
-            if animal in definition:
-                return True
+        animalRegex = re.compile(animals)
+        animalInDef = animalRegex.search(definition)
+        if animalInDef is not None:
+            return True
         return False
 
     def preprocess(sentence):
@@ -138,7 +145,6 @@ def filterWordByDefinition(definition, startIndex, endIndex):
                         return True
             if posOne == 'IN' or 'VB' in posOne:
                 return False
-
             return True
 
 
@@ -169,10 +175,10 @@ def getWordnik():
                 if termsInWord is not None:
                     wordSet.add(word)
                     words.append({
-                    'word': word,
-                    'definition': definition,
-                    'gender': gender,
-                    'tags': [source]
+                      'word': word,
+                      'definition': definition,
+                      'gender': gender,
+                      'tags': [source]
                     })
                     continue
                 termsInString = pattern.search(definition)
@@ -182,11 +188,18 @@ def getWordnik():
                     if filterWordByDefinition(definition, startIndex, endIndex):
                         wordSet.add(word)
                         words.append({
-                            'word': word,
-                            'definition': definition,
-                            'gender': gender,
-                            'tags': [source]
+                          'word': word,
+                          'definition': definition,
+                          'gender': gender,
+                          'tags': [source]
                         })
+                    else:
+                      discard.append({
+                        'word': word,
+                        'definition': definition,
+                        'gender': gender,
+                        'tags': [source]
+                      })
     allWords.extend(words)
 
   callApi(femaleTermsArr, femaleRegex, 'female')
@@ -205,17 +218,6 @@ def getDatamuse():
       for result in results:
         word = result['word'].lower()
         if (word not in wordSet):
-            termsInWord = getWordPattern(gender).search(word)
-            # get index of term
-            if termsInWord is not None:
-                wordSet.add(word)
-                words.append({
-                    'word': word,
-                    'definition': definition,
-                    'gender': gender,
-                    'tags': [source]
-                })
-                continue
             # check if it's a noun
             if ('tags' in result):
                 if ('n' in result['tags']):
@@ -224,18 +226,36 @@ def getDatamuse():
                   else:
                       definition = getWordDefinition(word)
                       if (definition != ' '):
-                          termsInString = pattern.search(definition)
-                          if termsInString is not None:
-                                startIndex = termsInString.start(0)
-                                endIndex = termsInString.end(0)
-                                if filterWordByDefinition(definition, startIndex, endIndex):
-                                    wordSet.add(word)
-                                    words.append({
-                                        'word': word,
-                                        'definition': definition,
-                                        'gender': gender,
-                                        'tags': [source]
-                                    })
+                        termsInWord = getWordPattern(gender).search(word)
+                        # get index of term
+                        if termsInWord is not None:
+                            wordSet.add(word)
+                            words.append({
+                              'word': word,
+                              'definition': definition,
+                              'gender': gender,
+                              'tags': [source]
+                            })
+                            continue
+                        termsInString = pattern.search(definition)
+                        if termsInString is not None:
+                              startIndex = termsInString.start(0)
+                              endIndex = termsInString.end(0)
+                              if filterWordByDefinition(definition, startIndex, endIndex):
+                                  wordSet.add(word)
+                                  words.append({
+                                    'word': word,
+                                    'definition': definition,
+                                    'gender': gender,
+                                    'tags': [source]
+                                  })
+                              else:
+                                discard.append({
+                                  'word': word,
+                                  'definition': definition,
+                                  'gender': gender,
+                                  'tags': [source]
+                                })
     allWords.extend(words)
 
   callApi(femaleTermsArr, femaleRegex, 'female')
@@ -281,6 +301,13 @@ def getWebster():
                                         'gender': gender,
                                         'tags': [source]
                                     })
+                        else:
+                          discard.append({
+                            'word': word,
+                            'definition': definition,
+                            'gender': gender,
+                            'tags': [source]
+                          })
 
 
     bucket(femaleRegex, 'female')
@@ -291,6 +318,7 @@ def getGSFull():
   with open('data/gender_specific_full.json', 'r') as f:
     results = json.load(f)
 
+  source = 'debiaswe'
   # all words in this file are gendered, so put the ones we can't get definitions for
   # in a separate file we will address later
   def bucket(pattern, gender):
@@ -299,7 +327,9 @@ def getGSFull():
       word = result.lower()
       if (word not in wordSet):
         termsInWord = getWordPattern(gender).search(word)
-        if termsInWord is not None:
+        definition = getWordDefinition(result)
+        if (definition is not None and definition != ' '):
+          if termsInWord is not None:
             wordSet.add(word)
             words.append({
                 'word': word,
@@ -308,8 +338,6 @@ def getGSFull():
                 'tags': [source]
             })
             continue
-        definition = getWordDefinition(result)
-        if (definition is not None and definition != ' '):
           termsInString = pattern.search(definition)
           if termsInString is not None:
             startIndex = termsInString.start(0)
@@ -318,9 +346,17 @@ def getGSFull():
               words.append({
                 'word': result,
                 'definition': definition,
-                'gender': gender
+                'gender': gender,
+                'tags': [source]
               })
               wordSet.add(result)
+            else:
+                discard.append({
+                  'word': word,
+                  'definition': definition,
+                  'gender': gender,
+                  'tags': [source]
+                })
     allWords.extend(words)
   bucket(femaleRegex, 'female')
   bucket(maleRegex, 'male')
@@ -374,20 +410,22 @@ def getUrbanDictionary():
 def addTerms(terms, gender):
   for word in terms:
     definition = getWordDefinition(word)
-    wordSet.add(word)
-    allWords.append({
-      'word': word,
-      'definition': definition,
-      'gender': gender,
-      'source': 'wordnik'
-    })
+    if word not in wordSet:
+      wordSet.add(word)
+      allWords.append({
+        'word': word,
+        'definition': definition,
+        'gender': gender,
+        'source': 'wordnik'
+      })
 
-addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-getWordnik()
-getWebster()
-getDatamuse()
-getGSFull()
+# addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+# addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+# getWordnik()
+# getWebster()
+# getDatamuse()
+# getGSFull()
 # getUrbanDictionary()
 
 writeToJson('words/unfiltered/all-unfiltered', allWords)
+writeToJson('words/unfiltered/discard', discard)
