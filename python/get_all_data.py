@@ -458,7 +458,6 @@ if __name__ == "__main__":
   with open('words/unfiltered/all-unfiltered.json') as f:
     allWords = json.load(f)
     wordSet = set(entry['word'] for entry in allWords)
-    discard = []
 
   with open('words/unfiltered/discard.json') as f:
     discard = json.load(f)
