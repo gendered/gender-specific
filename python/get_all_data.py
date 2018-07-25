@@ -37,19 +37,6 @@ maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b
 maleRegex = re.compile(maleTerms)
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
 
-with open('data/animals.json') as f:
-  animals = json.load(f)
-  animals = ("|".join(r'\b' + animal.lower() + r'\b' for animal in animals))
-
-with open('words/unfiltered/all-unfiltered.json') as f:
-  allWords = json.load(f)
-  wordSet = set(entry['word'] for entry in allWords)
-  discard = []
-
-with open('words/unfiltered/discard.json') as f:
-  discard = json.load(f)
-  discardSet = set(entry['word'] for entry in discard)
-
 # writes to a json file
 def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
@@ -464,6 +451,19 @@ def addTerms(terms, gender):
 
 
 if __name__ == "__main__":
+  with open('data/animals.json') as f:
+    animals = json.load(f)
+    animals = ("|".join(r'\b' + animal.lower() + r'\b' for animal in animals))
+
+  with open('words/unfiltered/all-unfiltered.json') as f:
+    allWords = json.load(f)
+    wordSet = set(entry['word'] for entry in allWords)
+    discard = []
+
+  with open('words/unfiltered/discard.json') as f:
+    discard = json.load(f)
+    discardSet = set(entry['word'] for entry in discard)
+
   # stuff only to run when not called via 'import' here
   addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
   addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')

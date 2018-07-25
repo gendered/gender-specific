@@ -3,7 +3,7 @@ from gensim.models import KeyedVectors
 filename = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
 import re
-from dotenv import Dotenv
+from dotenv import load_dotenv
 from wordnik import *
 import collections
 from PyDictionary import PyDictionary
@@ -123,7 +123,7 @@ def findGenderEquivalent(word, gender):
                     if equivalent in all_words_only:
                         return equivalent
                     else:
-                        checkEquivalent(equivalent)
+                        return checkEquivalent(equivalent)
         return ' '
 
     
