@@ -14,6 +14,7 @@ import pandas as pd
 import urbandictionary as ud
 import requests
 from wiktionaryparser import WiktionaryParser
+from vocabulary.vocabulary import Vocabulary as vb
 import io
 import re
 import string
@@ -67,22 +68,30 @@ def getWordDefinition(word):
     if definition is not None:
       return definition[0].text
 
+    meaningsList = vb.meaning(word)
+    if meaningsList != False:
+      defs = json.loads(meaningsList)
+      if (len(defs) > 0):
+        definition = defs[0]['text']
+        # some of the definitions have html tags
+        return re.sub('<[^<]+?>', '', definition)
+
     try:
-      # owlbot api
-      url = 'https://owlbot.info/api/v2/dictionary/' + word
-      r = requests.get(url)
-      result = (r.json())[0]
-      if (result.type == 'noun' and result.definition):
-        return result.definition
+      # wiktionary
+      parser = WiktionaryParser()
+      result = parser.fetch(word)
+      if (result):
+        definitions = result[0].definitions[0]
+        if definition.partOfSpeech == 'noun':
+          return definition.text
     except:
       try:
-        # wiktionary
-        parser = WiktionaryParser()
-        result = parser.fetch(word)
-        if (result):
-          definitions = result[0].definitions[0]
-          if definition.partOfSpeech == 'noun':
-            return definition.text
+        # owlbot api
+        url = 'https://owlbot.info/api/v2/dictionary/' + word
+        r = requests.get(url)
+        result = (r.json())[0]
+        if (result.type == 'noun' and result.definition):
+          return result.definition
       except KeyboardInterrupt:
         raise
       except:
@@ -445,15 +454,16 @@ def addTerms(terms, gender):
         'source': 'wordnik'
       })
 
-if __name__ == "__get_all_data__":
-   # stuff only to run when not called via 'import' here
+
+if __name__ == "__main__":
+  # stuff only to run when not called via 'import' here
   addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
   addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
   getWordnik()
   getWebster()
   getDatamuse()
   getGSFull()
-  # getUrbanDictionary()
+  # # getUrbanDictionary()
 
   writeToJson('words/unfiltered/all-unfiltered', allWords)
   writeToJson('words/unfiltered/discard', discard)

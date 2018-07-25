@@ -1,9 +1,9 @@
 import json
 from gensim.models import KeyedVectors
-filename = 'GoogleNews-vectors-negative300.bin'
+filename = 'models/GoogleNews-vectors-negative300.bin'
 model = KeyedVectors.load_word2vec_format(filename, binary=True)
 import re
-from dotenv import load_dotenv
+from dotenv import Dotenv
 from wordnik import *
 import collections
 from PyDictionary import PyDictionary
@@ -11,6 +11,12 @@ import requests
 import os
 from wiktionaryparser import WiktionaryParser
 from get_all_data import getWordDefinition
+from vocabulary.vocabulary import Vocabulary as vb
+
+# load dotenv in the base root
+APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
+dotenv_path = os.path.join(APP_ROOT, '.env')
+load_dotenv(dotenv_path)
 
 # wordnik api stuff
 apiUrl = 'http://api.wordnik.com/v4'
@@ -42,7 +48,8 @@ def defineWordEquivalent():
         'man': 'woman',
         'father': 'mother',
         'wife': 'husband',
-        'boy': 'girl'
+        'boy': 'girl',
+        'maternal': 'paternal'
     }
 
     for term in obj:
@@ -51,10 +58,29 @@ def defineWordEquivalent():
         wordOpposites[equiv] = term
 
 def findGenderEquivalent(word, gender):
+
+    def checkEquivalent(equivalent):
+        definition = getWordDefinition(equivalent)
+        if definition != ' ':
+            if gender == 'female':
+                opp_gender = 'male'
+                termsInString = maleRegex.search(definition)
+            else:
+                opp_gender = 'female'
+                termsInString = femaleRegex.search(definition)
+            if termsInString is not None:
+                all.append({
+                    'word': equivalent,
+                    'definition': definition,
+                    'gender': opp_gender
+                })
+                return equivalent
+        return ' '
+
     # Check if opposite of word can be found using the word itself.
     # E.g words like grandfather, grandmother
     def checkWordForEquivalent():
-        gendered = r'woman|man|father|mother|wife|husband|boy|girl'
+        gendered = r'woman|man|father|mother|wife|husband|boy|girl|maternal|paternal'
         rgex = re.compile(gendered)
         termsInString = rgex.search(word)
         if termsInString is not None:
@@ -66,17 +92,7 @@ def findGenderEquivalent(word, gender):
             if equivalent in all_words_only:
                 return equivalent
             definition = getWordDefinition(equivalent)
-            if gender == 'female':
-                opp_gender = 'male'
-            else:
-                opp_gender = 'female'
-            if definition != ' ':
-                all.append({
-                    'word': equivalent,
-                    'definition': definition,
-                    'gender': opp_gender
-                })
-                return equivalent
+            return checkEquivalent(equivalent)
         return ' '
 
 
@@ -97,21 +113,7 @@ def findGenderEquivalent(word, gender):
                     if equivalent in all_words_only:
                         return equivalent
                     else:
-                        definition = getWordDefinition(equivalent)
-                        if definition != ' ':
-                            if gender == 'female':
-                                opp_gender = 'male'
-                                termsInString = maleRegex.search(definition)
-                            else:
-                                opp_gender = 'female'
-                                termsInString = femaleRegex.search(definition)
-                            if termsInString is not None:
-                                 all.append({
-                                    'word': equivalent,
-                                    'definition': definition,
-                                    'gender': opp_gender
-                                })
-                        return equivalent
+                        checkEquivalent(equivalent)
         return ' '
 
     

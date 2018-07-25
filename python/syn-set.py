@@ -2,8 +2,16 @@ import json
 import os
 from pprint import pprint
 from vocabulary.vocabulary import Vocabulary as vb
+from wordnik import *
+from dotenv import load_dotenv
+import os
 
-with open('words/all-1.json') as f:
+# wordnik api stuff
+apiUrl = 'http://api.wordnik.com/v4'
+apiKey = os.getenv('API_KEY')
+client = swagger.ApiClient(apiKey, apiUrl)
+
+with open('words/filtered/all.json') as f:
     all = json.load(f)
 
 allSets = []
@@ -17,13 +25,16 @@ def getSynonyms(word):
     if isinstance(synonyms, list):
         synonyms = json.loads(synonyms)
         return [synonym['text'] for synonym in synonyms]
+    wordApi = WordApi.WordApi(client)
+    synonyms = wordApi.getRelatedWords(word, relationshipTypes='synonym')
+    if isinstance(synonyms, list):
+        return synonyms[0].words
     return ' '
 
 
 def createSets(words):
     for entry in words:
         word = entry['word']
-        print(word)
         # create set with word
         synonyms_set = set([word])
         synonyms = getSynonyms(word)
