@@ -36,23 +36,28 @@ export default {
     filteredWords () {
       var filtered = Object.assign({}, this.words);
       var activeFilters = this.activeFilters;
-      activeFilters.forEach(option => {
+      const len = activeFilters.length;
+      if (len > 0) {
         for (let letter in filtered) {
           const words = filtered[letter];
           filtered[letter] = words.filter(function(entry) {
-            switch (option.name) {
-              case 'sex':
-                return entry['gender'] === option.type;
-                break
-              case 'tag':
-                if (entry['tags']) {
-                  return entry['tags'].includes(option.type);
+            return (function () {
+              for (let i = 0; i < len; i++) {
+                let option = activeFilters[i];
+                switch (option.name) {
+                  case 'sex':
+                    return entry['gender'] === option.type;
+                  case 'tag':
+                    if (entry['tags']) {
+                      return entry['tags'].includes(option.type);
+                    }
                 }
-                break;
-            }
+                return false;
+              }
+            }());
           });
         }
-      });
+      }
       return filtered;
     }
   },

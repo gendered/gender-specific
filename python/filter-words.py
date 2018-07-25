@@ -53,5 +53,5 @@ def filterWords(arr):
                 all.append(entry)
 
 filterWords(all_words)
-writeToJson('words/not_strong', not_strong)
-writeToJson('words/all', all)
+writeToJson('words/filtered/not_strong', not_strong)
+writeToJson('words/filtered/all', all)
