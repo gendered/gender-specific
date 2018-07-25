@@ -74,6 +74,7 @@ def findGenderEquivalent(word, gender):
                     'definition': definition,
                     'gender': opp_gender
                 })
+                all_words_only.append(equivalent)
                 return equivalent
         return ' '
 

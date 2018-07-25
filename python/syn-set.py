@@ -79,6 +79,7 @@ def createSets(words):
                         final_synonyms.append(word)
             synonyms_set.extend(final_synonyms)
             allSets.append(list(synonyms_set))
-
-createSets(all)
-writeToJson('words/sets', allSets)
+            
+if __name__ == "__main__":
+    createSets(all)
+    writeToJson('words/sets', allSets)
