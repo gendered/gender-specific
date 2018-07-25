@@ -11,24 +11,7 @@ export default {
   data() {
     return {
       activeFilters: [],
-      tags: [
-        {
-          'name': 'tag',
-          'type': 'urban',
-        },
-        {
-          'name': 'tag',
-          'type': 'wordnik',
-        },
-        {
-          'name': 'tag',
-          'type': 'webster',
-        },
-        {
-          'name': 'tag',
-          'type': 'datamuse',
-        },
-      ],
+      tags: [],
       sex: [
         {
           'name': 'sex',
@@ -75,9 +58,20 @@ export default {
   },
   methods: {
     alphabetize(data) {
+      let allTags = new Set([]);
       let obj = {};
       for (let i = 0; i < data.length; i++) {
         const item = data[i]
+        // Get all tags being used
+        const tags = item.tags;
+        if (tags) {
+          for (let i = 0; i < tags.length; i++) {
+            let tag = tags[i];
+            if (!allTags.has(tag)) {
+              allTags.add(tag)
+            }
+          }
+        }
         const letter = item.word[0].toUpperCase();
         if(!obj[letter]) {
           obj[letter] = [item];
@@ -85,7 +79,13 @@ export default {
           obj[letter].push(item);
         }
       }
+      this.createTags(Array.from(allTags));
       return this.sort(obj);
+    },
+    createTags(arr) {
+      this.tags = arr.map((item) => {
+        return {'name': 'tag', 'type': item }
+      });
     },
     sort(unordered) {
       const ordered = {};

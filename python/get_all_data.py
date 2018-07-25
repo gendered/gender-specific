@@ -196,7 +196,7 @@ def getWordnik():
         for result in reverseDictionary:
             word = result.word.lower()
             definition = result.text
-            if (word not in wordSet):
+            if (word not in wordSet and word not in discardSet):
                 termsInWord = getWordPattern(gender).search(word)
                 # get index of term
                 if termsInWord is not None:
@@ -221,13 +221,13 @@ def getWordnik():
                           'tags': [source]
                         })
                     else:
-                      if word not in discardSet:
-                        discard.append({
-                          'word': word,
-                          'definition': definition,
-                          'gender': gender,
-                          'tags': [source]
-                        })
+                      discardSet.add(word)
+                      discard.append({
+                        'word': word,
+                        'definition': definition,
+                        'gender': gender,
+                        'tags': [source]
+                      })
     allWords.extend(words)
 
   callApi(femaleTermsArr, femaleRegex, 'female')
@@ -244,7 +244,7 @@ def getDatamuse():
       results = api.words(ml=term, max=1000, md='dp')
       for result in results:
         word = result['word'].lower()
-        if (word not in wordSet):
+        if (word not in wordSet and word not in discardSet):
             # check if it's a noun
             if ('tags' in result):
                 if ('n' in result['tags']):
@@ -277,13 +277,13 @@ def getDatamuse():
                                     'tags': [source]
                                   })
                               else:
-                                if word not in discardSet:
-                                  discard.append({
-                                    'word': word,
-                                    'definition': definition,
-                                    'gender': gender,
-                                    'tags': [source]
-                                  })
+                                discardSet.add(word)
+                                discard.append({
+                                  'word': word,
+                                  'definition': definition,
+                                  'gender': gender,
+                                  'tags': [source]
+                                })
     allWords.extend(words)
 
   callApi(femaleTermsArr, femaleRegex, 'female')
@@ -303,7 +303,7 @@ def getWebster():
             termsInString = pattern.search(definition.lower())
             word = result.lower()
             termsInWord = getWordPattern(gender).search(word)
-            if (word not in wordSet):
+            if (word not in wordSet and word not in discardSet):
                 if termsInWord is not None:
                         wordSet.add(word)
                         words.append({
@@ -314,7 +314,7 @@ def getWebster():
                         })
                         continue
                 if termsInString is not None:
-                    if (word not in wordSet):
+                    if (word not in wordSet and word not in discardSet):
                         startIndex = termsInString.start(0)
                         endIndex = termsInString.end(0)
                         if filterWordByDefinition(definition, startIndex, endIndex):
@@ -330,13 +330,13 @@ def getWebster():
                                         'tags': [source]
                                     })
                         else:
-                          if word not in discardSet:
-                            discard.append({
-                              'word': word,
-                              'definition': definition,
-                              'gender': gender,
-                              'tags': [source]
-                            })
+                          discardSet.add(word)
+                          discard.append({
+                            'word': word,
+                            'definition': definition,
+                            'gender': gender,
+                            'tags': [source]
+                          })
 
 
     bucket(femaleRegex, 'female')
@@ -354,7 +354,7 @@ def getGSFull():
     words = []
     for result in results:
       word = result.lower()
-      if (word not in wordSet):
+      if (word not in wordSet and word not in discardSet):
         termsInWord = getWordPattern(gender).search(word)
         definition = getWordDefinition(result)
         if (definition is not None and definition != ' '):
@@ -380,13 +380,13 @@ def getGSFull():
               })
               wordSet.add(result)
             else:
-              if word not in discardSet:
-                discard.append({
-                  'word': word,
-                  'definition': definition,
-                  'gender': gender,
-                  'tags': [source]
-                })
+              discardSet.add(word)
+              discard.append({
+                'word': word,
+                'definition': definition,
+                'gender': gender,
+                'tags': [source]
+              })
     allWords.extend(words)
   bucket(femaleRegex, 'female')
   bucket(maleRegex, 'male')
@@ -418,7 +418,7 @@ def getUrbanDictionary():
     for index, row in ub.iterrows():
       word = row['word']
       definition = row['definition']
-      if (word not in wordSet):
+      if (word not in wordSet and word not in discardSet):
         termsInString = pattern.search(definition)
         startIndex = termsInString.start(0)
         endIndex = termsInString.end(0)
@@ -440,7 +440,7 @@ def getUrbanDictionary():
 def addTerms(terms, gender):
   for word in terms:
     definition = getWordDefinition(word)
-    if word not in wordSet:
+    if word not in wordSet and word not in discardSet:
       wordSet.add(word)
       allWords.append({
         'word': word,
@@ -474,4 +474,4 @@ if __name__ == "__main__":
   # getUrbanDictionary()
 
   writeToJson('words/unfiltered/all-unfiltered', allWords)
-  writeToJson('words/unfiltered/discard', discard)
+  writeToJson('words/unfiltered/discard', discardSet)
