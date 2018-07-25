@@ -24,7 +24,7 @@ apiKey = os.getenv('API_KEY')
 client = swagger.ApiClient(apiKey, apiUrl)
 
 # open files
-with open('words/all.json') as f:
+with open('words/filtered/all.json') as f:
     all = json.load(f)
 
 femaleTerms = r'\b[\w-]*woman\b|\bfemale\b|\b[\w-]girl\b|\bgirls\b|\b[\w-]*women\b|\blady\b|\b[\w-]*mother\b|\b[\w-]*daughter\b|\bwife\b'
@@ -93,8 +93,18 @@ def findGenderEquivalent(word, gender):
                 return equivalent
             definition = getWordDefinition(equivalent)
             return checkEquivalent(equivalent)
-        return ' '
 
+        # handle 'ess', 'ette' differently
+        gendered = r'ette|ess'
+        rgex = re.compile(gendered)
+        termsInString = rgex.search(word)
+        if termsInString is not None:
+            word_copy = word
+            startIndex = termsInString.start(0)
+            endIndex = termsInString.end(0)
+            equivalent = word[0:startIndex]
+            if equivalent in all_words_only:
+                return equivalent
 
     def getGoogleNews():      
         if word in model.vocab:
@@ -125,7 +135,7 @@ def findGenderEquivalent(word, gender):
         return equiv
     getGoogleNews()
 
-if __name__ == "__find-equivalent__":
+if __name__ == "__main__":
     defineWordEquivalent()
     for entry in all:
         word = entry['word']

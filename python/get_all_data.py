@@ -36,7 +36,6 @@ maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
 maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b'
 maleRegex = re.compile(maleTerms)
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
-discard = []
 
 with open('data/animals.json') as f:
   animals = json.load(f)
@@ -45,6 +44,11 @@ with open('data/animals.json') as f:
 with open('words/unfiltered/all-unfiltered.json') as f:
   allWords = json.load(f)
   wordSet = set(entry['word'] for entry in allWords)
+  discard = []
+
+with open('words/unfiltered/discard.json') as f:
+  discard = json.load(f)
+  discardSet = set(entry['word'] for entry in discard)
 
 # writes to a json file
 def writeToJson(path, set):
@@ -230,12 +234,13 @@ def getWordnik():
                           'tags': [source]
                         })
                     else:
-                      discard.append({
-                        'word': word,
-                        'definition': definition,
-                        'gender': gender,
-                        'tags': [source]
-                      })
+                      if word not in discardSet:
+                        discard.append({
+                          'word': word,
+                          'definition': definition,
+                          'gender': gender,
+                          'tags': [source]
+                        })
     allWords.extend(words)
 
   callApi(femaleTermsArr, femaleRegex, 'female')
@@ -285,12 +290,13 @@ def getDatamuse():
                                     'tags': [source]
                                   })
                               else:
-                                discard.append({
-                                  'word': word,
-                                  'definition': definition,
-                                  'gender': gender,
-                                  'tags': [source]
-                                })
+                                if word not in discardSet:
+                                  discard.append({
+                                    'word': word,
+                                    'definition': definition,
+                                    'gender': gender,
+                                    'tags': [source]
+                                  })
     allWords.extend(words)
 
   callApi(femaleTermsArr, femaleRegex, 'female')
@@ -337,12 +343,13 @@ def getWebster():
                                         'tags': [source]
                                     })
                         else:
-                          discard.append({
-                            'word': word,
-                            'definition': definition,
-                            'gender': gender,
-                            'tags': [source]
-                          })
+                          if word not in discardSet:
+                            discard.append({
+                              'word': word,
+                              'definition': definition,
+                              'gender': gender,
+                              'tags': [source]
+                            })
 
 
     bucket(femaleRegex, 'female')
@@ -386,6 +393,7 @@ def getGSFull():
               })
               wordSet.add(result)
             else:
+              if word not in discardSet:
                 discard.append({
                   'word': word,
                   'definition': definition,
@@ -463,7 +471,7 @@ if __name__ == "__main__":
   getWebster()
   getDatamuse()
   getGSFull()
-  # # getUrbanDictionary()
+  # getUrbanDictionary()
 
   writeToJson('words/unfiltered/all-unfiltered', allWords)
   writeToJson('words/unfiltered/discard', discard)
