@@ -138,10 +138,12 @@ def findGenderEquivalent(word, gender):
 if __name__ == "__main__":
     defineWordEquivalent()
     for entry in all:
-        word = entry['word']
-        gender = entry['gender']
-        equiv = findGenderEquivalent(word, gender)
-        if equiv != ' ' and equiv is not None:
-            entry['equivalent'] = equiv
+        if 'equivalent' in entry:
+            word = entry['word']
+            gender = entry['gender']
+            equiv = findGenderEquivalent(word, gender)
+            if equiv != ' ' and equiv is not None:
+                entry['equivalent'] = equiv
+                all[equiv] = word
 
     writeToJson('words/with-pairs/all', all)
