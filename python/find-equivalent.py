@@ -132,7 +132,7 @@ def findGenderEquivalent(word, gender):
     if equiv != ' ':
         return equiv
     equiv = getGoogleNews()
-     if equiv != ' ':
+    if equiv != ' ':
         return equiv
 
 if __name__ == "__main__":
