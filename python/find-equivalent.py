@@ -27,12 +27,6 @@ client = swagger.ApiClient(apiKey, apiUrl)
 with open('words/filtered/all.json') as f:
     all = json.load(f)
 
-femaleTerms = r'\b[\w-]*woman\b|\bfemale\b|\b[\w-]girl\b|\bgirls\b|\b[\w-]*women\b|\blady\b|\b[\w-]*mother\b|\b[\w-]*daughter\b|\bwife\b'
-femaleRegex = re.compile(femaleTerms)
-
-maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b'
-maleRegex = re.compile(maleTerms)
-
 all_words_only = [entry['word'] for entry in all]
 wordOpposites = {}
 
@@ -58,15 +52,18 @@ def defineWordEquivalent():
         wordOpposites[equiv] = term
 
 def findGenderEquivalent(word, gender):
-
     def checkEquivalent(equivalent):
         definition = getWordDefinition(equivalent)
-        if definition != ' ':
+        if definition != ' ' and definition is not None:
             if gender == 'female':
                 opp_gender = 'male'
+                maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b'
+                maleRegex = re.compile(maleTerms)
                 termsInString = maleRegex.search(definition)
             else:
                 opp_gender = 'female'
+                femaleTerms = r'\b[\w-]*woman\b|\bfemale\b|\b[\w-]girl\b|\bgirls\b|\b[\w-]*women\b|\blady\b|\b[\w-]*mother\b|\b[\w-]*daughter\b|\bwife\b'
+                femaleRegex = re.compile(femaleTerms)
                 termsInString = femaleRegex.search(definition)
             if termsInString is not None:
                 all.append({
@@ -92,7 +89,6 @@ def findGenderEquivalent(word, gender):
             equivalent = word_copy.replace(toReplace, wordOpposites[toReplace])
             if equivalent in all_words_only:
                 return equivalent
-            definition = getWordDefinition(equivalent)
             return checkEquivalent(equivalent)
 
         # handle 'ess', 'ette' differently
@@ -106,6 +102,7 @@ def findGenderEquivalent(word, gender):
             equivalent = word[0:startIndex]
             if equivalent in all_words_only:
                 return equivalent
+        return ' '
 
     def getGoogleNews():      
         if word in model.vocab:
@@ -134,7 +131,9 @@ def findGenderEquivalent(word, gender):
     equiv = checkWordForEquivalent()
     if equiv != ' ':
         return equiv
-    getGoogleNews()
+    equiv = getGoogleNews()
+     if equiv != ' ':
+        return equiv
 
 if __name__ == "__main__":
     defineWordEquivalent()
@@ -145,4 +144,4 @@ if __name__ == "__main__":
         if equiv != ' ' and equiv is not None:
             entry['equivalent'] = equiv
 
-    writeToJson('words/all-pairs', all)
+    writeToJson('words/with-pairs/all', all)
