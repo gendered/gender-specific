@@ -29,11 +29,13 @@ apiKey = os.getenv('API_KEY')
 client = swagger.ApiClient(apiKey, apiUrl)
 
 femaleTermsArr = ['woman', 'female', 'girl', 'lady', 'women', 'mother', 'daughter', 'wife']
-femaleTerms = r'\b[\w-]*woman\b|\bfemale\b|\b[\w-]girl\b|\bgirls\b|\b[\w-]*women\b|\blady\b|\b[\w-]*mother\b|\b[\w-]*daughter\b|\bwife\b'
+femaleTerms = r"""\b[\w-]*woman\b[^'-]|\bfemale\b|\b[\w-]girl\b|\bgirls\b
+|\b[\w-]*women\b[^'-]|\blady\b[^'-]|\b[\w-]*mother\b[^'-]|\b[\w-]*daughter\b|\bwife\b"""
+
 femaleRegex = re.compile(femaleTerms)
 
 maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
-maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b'
+maleTerms = r"""\bman\b[^'-]|\bmale\b|\bboy\b|\bmen\b[^'-]|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b"""
 maleRegex = re.compile(maleTerms)
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
 
@@ -41,142 +43,6 @@ wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother'
 def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
       json.dump(list(set), outfile)
-
-# tries to get word definition from a bunch of dictionary APIs
-def getWordDefinition(word):
-  def getDef(word):
-    dictionary=PyDictionary()
-    definition = dictionary.meaning(word)
-    if isinstance(definition, dict) and 'Noun' in definition:
-      defs = definition['Noun']
-      if isinstance(defs, list) and len(defs) > 0:
-        return defs[0]
-
-    # wordnik dictionary
-    wordApi = WordApi.WordApi(client)
-    definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
-
-    if definition is not None:
-      return definition[0].text
-
-    meaningsList = vb.meaning(word)
-    if meaningsList != False:
-      defs = json.loads(meaningsList)
-      if (len(defs) > 0):
-        definition = defs[0]['text']
-        # some of the definitions have html tags
-        return re.sub('<[^<]+?>', '', definition)
-
-    try:
-      # wiktionary
-      parser = WiktionaryParser()
-      result = parser.fetch(word)
-      if (result):
-        definitions = result[0].definitions[0]
-        if definition.partOfSpeech == 'noun':
-          return definition.text
-    except:
-      try:
-        # owlbot api
-        url = 'https://owlbot.info/api/v2/dictionary/' + word
-        r = requests.get(url)
-        result = (r.json())[0]
-        if (result.type == 'noun' and result.definition):
-          return result.definition
-      except KeyboardInterrupt:
-        raise
-      except:
-        return ' '
-
-  searches = []
-  # for example, look for beauty_queen, beauty-queen, beauty queen.
-  if '_' in word:
-    searches.extend([word, word.replace('_', ' '), word.replace('_', '-')])
-  if (len(searches) != 0):
-    for wordToSearch in searches:
-      definition = getDef(wordToSearch)
-      if definition is not None and definition != ' ':
-        return definition
-  else:
-    definition = getDef(word)
-  return definition
-
-def filterWordByDefinition(definition, startIndex, endIndex):
-    # remove word with any of these terms 
-    def hasWordsToExclude():
-        arr = r'\bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|\bman or woman\b'
-        rgex = re.compile(arr)
-        termInDef = rgex.search(definition)
-        if termInDef is not None:
-            return True
-        return False
-
-    # remove entries with animals in definition
-    def isThereAnimal():
-        animalRegex = re.compile(animals)
-        animalInDef = animalRegex.search(definition)
-        if animalInDef is not None:
-            return True
-        return False
-        
-    def preprocess(sentence):
-        sentence = sentence.lower()
-        translator = str.maketrans('', '', string.punctuation)
-        return sentence.translate(translator)
-
-    # ignore 'the', 'a' and 'an'
-    def filterTags(tags):
-      new_tags = []
-      for item in tags:
-          word = item[0]
-          if word != 'a' and word != 'an' and word != 'the':
-              new_tags.append(item)
-      return new_tags
-
-    def anyExceptions(definition, tags):
-        exceptions = 'name of|applied to|given to|term for'
-        rgex = re.compile(exceptions)
-        termInDef = rgex.search(definition)
-        if termInDef is not None:
-            return True
-        return False
-
-    def sentenceIsRightStructure():
-        # trim
-        trimmedDefinition = definition[0:endIndex]
-        # remove a and an
-        cleanDefinition = preprocess(trimmedDefinition)
-        # part of speech tagger
-        text = word_tokenize(cleanDefinition)
-        tags = filterTags(nltk.pos_tag(text))
-
-        # gendered term is the last in the string so it'll be the last in the array
-        length = len(tags)
-        # so the term before will be at this location
-        # check if it's a preposition or verb before gendered term
-        if length <= 1:
-            return True
-        else:
-            if not anyExceptions(definition, tags):
-                posOne = tags[length-2][1]
-                termOne = tags[length-2][0]
-                # gendered term should not be the object of a preposition
-                if posOne == 'IN':
-                    return False
-                if termOne == 'being':
-                    return False
-                if length >= 2:
-                    posTwo = tags[length-3][1]
-                    if posTwo == 'IN':
-                      return False
-                return True
-            else:
-                return True
-
-    if not isThereAnimal() and not hasWordsToExclude() and sentenceIsRightStructure():
-        return True
-    else:
-        return False
 
 # check if the word is one of these gendered words or has a mention of them
 def getWordPattern(gender):
@@ -196,7 +62,7 @@ def getWordnik():
         for result in reverseDictionary:
             word = result.word.lower()
             definition = result.text
-            if (word not in wordSet and word not in discardSet):
+            if (word not in wordSet and word not in discardSet and filterByWord(word)):
                 termsInWord = getWordPattern(gender).search(word)
                 # get index of term
                 if termsInWord is not None:
@@ -244,7 +110,7 @@ def getDatamuse():
       results = api.words(ml=term, max=1000, md='dp')
       for result in results:
         word = result['word'].lower()
-        if (word not in wordSet and word not in discardSet):
+        if (word not in wordSet and word not in discardSet and filterByWord(word)):
             # check if it's a noun
             if ('tags' in result):
                 if ('n' in result['tags']):
@@ -303,7 +169,7 @@ def getWebster():
             termsInString = pattern.search(definition.lower())
             word = result.lower()
             termsInWord = getWordPattern(gender).search(word)
-            if (word not in wordSet and word not in discardSet):
+            if (word not in wordSet and word not in discardSet and filterByWord(word)):
                 if termsInWord is not None:
                         wordSet.add(word)
                         words.append({
@@ -354,7 +220,7 @@ def getGSFull():
     words = []
     for result in results:
       word = result.lower()
-      if (word not in wordSet and word not in discardSet):
+      if (word not in wordSet and word not in discardSet and filterByWord(word)):
         termsInWord = getWordPattern(gender).search(word)
         definition = getWordDefinition(result)
         if (definition is not None and definition != ' '):
@@ -413,30 +279,6 @@ def getUrbanDictionary():
   # remove duplicates
   ub = ub[~ub[['word']].apply(lambda x: x.str.lower().str.replace(" ","")).duplicated()]
 
-  def addToArray(ub, pattern, gender):
-    words = []
-    for index, row in ub.iterrows():
-      word = row['word']
-      definition = row['definition']
-      if (word not in wordSet and word not in discardSet):
-        termsInString = pattern.search(definition)
-        startIndex = termsInString.start(0)
-        endIndex = termsInString.end(0)
-        if filterWordByDefinition(definition, startIndex, endIndex):
-          wordSet.add(word)
-          words.append({
-            'word': word,
-            'definition': definition,
-            'tags': [source],
-            'gender': gender
-          })
-    allWords.extend(words)
-
-
-  addToArray(ub[(ub['definition']).str.contains(femaleTerms, na=False)], femaleRegex, 'female')
-  addToArray(ub[ub['definition'].str.contains(maleTerms, na=False)], maleRegex, 'male')
-  print ('urban dic done')
-
 def addTerms(terms, gender):
   for word in terms:
     definition = getWordDefinition(word)
@@ -451,10 +293,6 @@ def addTerms(terms, gender):
 
 
 if __name__ == "__main__":
-  with open('data/animals.json') as f:
-    animals = json.load(f)
-    animals = ("|".join(r'\b' + animal.lower() + r'\b' for animal in animals))
-
   with open('words/unfiltered/all-unfiltered.json') as f:
     allWords = json.load(f)
     wordSet = set(entry['word'] for entry in allWords)
