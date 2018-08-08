@@ -24,12 +24,11 @@ apiKey = os.getenv('API_KEY')
 client = swagger.ApiClient(apiKey, apiUrl)
 
 # open files
-with open('words/filtered/all.json') as f:
+with open('words/all.json') as f:
     all = json.load(f)
 
 all_words_only = [entry['word'] for entry in all]
 wordOpposites = {}
-
 
 def writeToJson(path, arr):
 	with open(path + '.json', 'w') as outfile:
@@ -146,4 +145,4 @@ if __name__ == "__main__":
                 entry['equivalent'] = equiv
                 all[equiv] = word
 
-    writeToJson('words/with-pairs/all', all)
+    writeToJson('words/all', all)
