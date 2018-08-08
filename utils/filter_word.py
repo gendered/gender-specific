@@ -9,10 +9,18 @@ import re
 import string
 import exclude_words
 
+def hasGenderedTerm(word):
+    s = r"""\b[\w]*?woman\b|\b[\w]*?girl|\b[\w]*?women\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\b[\w]*?man\b|\b[\w]*?boy\b|\b[\w]*?men\b|\b[\w]*?son\b|\b[\w]*?father\b|\b[\w]*?husband\b"""
+    pattern = re.compile(s)
+    termsInWord = pattern.search(word)
+    if termsInWord is not None:
+        return True
+    return False
+
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or len(word.split()) > 2:
+    if hasNumbers(word) or not hasGenderedTerm(word):
         return False
     return True
 
