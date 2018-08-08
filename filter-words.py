@@ -1,7 +1,7 @@
 import json
 import re
 
-with open('words/unfiltered/all-unfiltered.json') as f:
+with open('words/filtered/all.json') as f:
     all_words = json.load(f)
 
 def writeToJson(path, arr):
@@ -26,30 +26,35 @@ def hasWordsToExclude(word, definition):
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or len(word.split()) > 2:
+    if hasNumbers(word):
         return False
     return True
 
 def isGendered(word, definition):
-    terms = r"""\b[\w-]*woman\b[^'-]|\bfemale\b|\b[\w-]girl\b|\bgirls\b
-    |\b[\w-]*women\b[^'-]|\blady\b[^'-]|\b[\w-]*mother\b[^'-]|\b[\w-]*daughter\b|\bwife\b|
-    \bman\b[^'-]|\bmale\b|\bboy\b|\bmen\b[^'-]|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b"""
-    pattern = re.compile(terms)
-    termsInDef =  pattern.search(definition.lower())
-    if termsInDef is not None:
+    s = r"""\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w]*?father\b|\bhusband\b"""
+    pattern = re.compile(s)
+    termsInDef = pattern.search(definition.lower())
+    s = r"""\b[\w]*?woman\b|\b[\w]*?girl|\b[\w]*?women\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\b[\w]*?man\b|\b[\w]*?boy\b|\b[\w]*?men\b|\b[\w]*?son\b|\b[\w]*?father\b|\b[\w]*?husband\b"""
+    pattern = re.compile(s)
+    termsInWord = pattern.search(definition.lower())
+    if termsInDef is not None and termsInWord is None:
+        endIndex = termsInDef.end(0)
+        if len(definition) != endIndex:
+            last = definition[endIndex]
+            if last == "'" or last == '-':
+                return False
         return True
-    else:
-        print(word, definition)
-        return False
+    elif termsInDef is not None or termsInWord is not None:
+        return True
+    return False
+
 
 for entry in all_words:
     word = entry['word']
     if isValidWord(word):
         definition = entry['definition']
-        if isGendered(word, definition):
+        if isValidWord(word) and isGendered(word, definition):
             all.append(entry)
-    else:
-        discard.append(entry)
 
-# writeToJson('words/filtered/discard-2', discard)
-# writeToJson('words/filtered/all-2', all)
+
+writeToJson('words/filtered/all', all)
