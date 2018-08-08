@@ -1,7 +1,5 @@
 import json
-from gensim.models import KeyedVectors, word2vec
-filename = 'models/GoogleNews-vectors-negative300.bin'
-model = KeyedVectors.load_word2vec_format(filename, binary=True)
+import re
 
 with open('words/unfiltered/all-unfiltered.json') as f:
     all_words = json.load(f)
@@ -12,46 +10,38 @@ def writeToJson(path, arr):
 
 not_strong = []
 all = []
+discard = []
 
-def filterWords(arr):
+def hasWordsToExclude(word, definition):
+    f = open('utils/pattern.txt','r')
+    terms = f.read().replace('\n', '')
+    rgex = re.compile(terms)
+    termInDef = rgex.search(definition)
+    if termInDef is not None:
+        start = termInDef.start(0)
+        end = termInDef.end(0)
+        print('found', word, definition[start:end])
+    #     return True
+    # return False
 
-    def getMaxSim(terms, word):
-        max = 0
-        for term in terms:
-            sim = model.similarity(word, term)
-            if sim > max:
-                max = sim
-        return max
+def isGendered(definition):
+    terms = r"""\b[\w-]*woman\b[^'-]|\bfemale\b|\b[\w-]girl\b|\bgirls\b
+    |\b[\w-]*women\b[^'-]|\blady\b[^'-]|\b[\w-]*mother\b[^'-]|\b[\w-]*daughter\b|\bwife\b|
+    \bman\b[^'-]|\bmale\b|\bboy\b|\bmen\b[^'-]|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b"""
+    pattern = re.compile(terms)
+    termsInDef =  pattern.search(definition.lower())
+    if termsInDef is not None:
+        return True
+    else:
+        return False
 
-    def checkDistance(word):
-        f_sim = getMaxSim(['woman', 'women', 'female'], word)
-        m_sim = getMaxSim(['man','men', 'male'], word)
-        return {
-            'f_sim': f_sim,
-            'm_sim': m_sim
-        }
+for entry in all_words:
+    word = entry['word']
+    definition = entry['definition']
+    if not hasWordsToExclude(word, definition):
+        all.append(entry)
+    else:
+        discard.append(entry)
 
-    for entry in arr:
-        definition = entry['definition']
-        if ('tags' in entry):
-            tags = entry['tags']
-            word = entry['word'].lower()
-            if word in model.vocab:
-                sims = checkDistance(word)
-                f_sim = sims['f_sim']
-                m_sim = sims['m_sim']
-                if (f_sim < 0.1 and m_sim < 0.1):
-                    not_strong.append(entry)
-                    continue
-                elif f_sim > 0.1 and f_sim > m_sim:
-                    entry['gender'] = 'female'
-                    all.append(entry)
-                elif m_sim > f_sim and m_sim > 0.1:
-                    entry['gender'] = 'male'
-                    all.append(entry)
-            else:
-                all.append(entry)
-
-filterWords(all_words)
-writeToJson('words/filtered/not_strong', not_strong)
-writeToJson('words/filtered/all', all)
+writeToJson('words/filtered/discard-2', discard)
+writeToJson('words/filtered/all-2', all)
