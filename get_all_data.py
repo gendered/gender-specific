@@ -20,9 +20,9 @@ import re
 import string
 import sys
 sys.path.insert(0, 'utils/')
-from defs import getWordDefinition
-from filter import isValidWord
-from filter import isValidDefinition
+from get_defs import getWordDefinition
+from filter_word import isValidWord
+from filter_word import isValidDefinition
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top

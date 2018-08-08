@@ -12,7 +12,7 @@ import os
 from wiktionaryparser import WiktionaryParser
 import sys
 sys.path.insert(0, 'utils/')
-import defs
+import get_defs
 from vocabulary.vocabulary import Vocabulary as vb
 
 # load dotenv in the base root
