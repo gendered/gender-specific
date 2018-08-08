@@ -59,12 +59,12 @@ def findGenderEquivalent(word, gender):
         if definition != ' ' and definition is not None:
             if gender == 'female':
                 opp_gender = 'male'
-                maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b'
+                maleTerms = r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w]*?father\b|\bhusband\b'
                 maleRegex = re.compile(maleTerms)
                 termsInString = maleRegex.search(definition)
             else:
                 opp_gender = 'female'
-                femaleTerms = r'\b[\w-]*woman\b|\bfemale\b|\b[\w-]girl\b|\bgirls\b|\b[\w-]*women\b|\blady\b|\b[\w-]*mother\b|\b[\w-]*daughter\b|\bwife\b'
+                femaleTerms = r'\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b'
                 femaleRegex = re.compile(femaleTerms)
                 termsInString = femaleRegex.search(definition)
             if termsInString is not None:
@@ -128,7 +128,7 @@ def findGenderEquivalent(word, gender):
 
 
     for term in wordOpposites:
-        if term == 'word':
+        if term == word:
             return wordOpposites[term]
     equiv = checkWordForEquivalent()
     if equiv != ' ':
@@ -147,4 +147,4 @@ if __name__ == "__main__":
             if equiv != ' ' and equiv is not None:
                 entry['equivalent'] = equiv
 
-    writeToJson('words/all', all)
+    writeToJson('words/all-2', all)
