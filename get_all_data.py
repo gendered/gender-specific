@@ -279,11 +279,11 @@ def addTerms(terms, gender):
 
 
 if __name__ == "__main__":
-  with open('words/unfiltered/all-unfiltered.json') as f:
+  with open('words/all.json') as f:
     allWords = json.load(f)
     wordSet = set(entry['word'] for entry in allWords)
 
-  with open('words/unfiltered/discard.json') as f:
+  with open('words/discard.json') as f:
     discard = json.load(f)
     discardSet = set(entry['word'] for entry in discard)
 
@@ -296,5 +296,5 @@ if __name__ == "__main__":
   getGSFull()
   # getUrbanDictionary()
 
-  writeToJson('words/unfiltered/all-unfiltered', allWords)
-  writeToJson('words/unfiltered/discard', discardSet)
+  writeToJson('words/all', allWords)
+  writeToJson('words/discard', discardSet)
