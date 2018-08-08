@@ -33,7 +33,7 @@ def getWordnikLists():
     # wordnik dictionary
     urls = ['https://www.wordnik.com/lists/biology-1-unit-2--cells',
     'https://www.wordnik.com/lists/biolorgy',
-    'https://www.wordnik.com/lists/genetics',
+    'https://www.wordnik.com/lists/genetics']
     return scrapePage(urls, 'li.word > a')
 
 def getCollinsLists():
@@ -46,7 +46,7 @@ def getCollinsLists():
 
 def scrapePage(urls, selector):
     s = ''
-    for site, i in enumerate(urls):
+    for site in urls:
         try:
             req = urllib.request.Request(site, headers=hdr)
             page = urllib.request.urlopen(req, context=context)
@@ -60,8 +60,10 @@ def scrapePage(urls, selector):
                 word = preprocess(word)
                 words[index] = word
             s += listToRegexStr(words)
-        except urllib.request.URLError:
-            raise MyException("There was an error: %r" % e)
+        except urllib.request.HTTPError as e:
+            print('HTTPError = ' + str(e.code))
+        except urllib.request.URLError as e:
+            print('URLError = ' + str(e.reason))
     return s
 
 patternOne = r"""
