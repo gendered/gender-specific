@@ -19,8 +19,8 @@ import io
 import re
 import string
 from utils/defs import getWordDefinition
-from utils/filter import filterByWord
-from utils/filter import filterWordByDefinition
+from utils/filter import isValidWord
+from utils/filter import isValidDefinition
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
@@ -66,7 +66,7 @@ def getWordnik():
         for result in reverseDictionary:
             word = result.word.lower()
             definition = result.text
-            if (word not in wordSet and word not in discardSet and filterByWord(word)):
+            if (word not in wordSet and word not in discardSet and isValidWord(word)):
                 termsInWord = getWordPattern(gender).search(word)
                 # get index of term
                 if termsInWord is not None:
@@ -82,7 +82,7 @@ def getWordnik():
                 if termsInString is not None:
                     startIndex = termsInString.start(0)
                     endIndex = termsInString.end(0)
-                    if filterWordByDefinition(definition, startIndex, endIndex):
+                    if isValidDefinition(definition, startIndex, endIndex):
                         wordSet.add(word)
                         words.append({
                           'word': word,
@@ -114,7 +114,7 @@ def getDatamuse():
       results = api.words(ml=term, max=1000, md='dp')
       for result in results:
         word = result['word'].lower()
-        if (word not in wordSet and word not in discardSet and filterByWord(word)):
+        if (word not in wordSet and word not in discardSet and isValidWord(word)):
             # check if it's a noun
             if ('tags' in result):
                 if ('n' in result['tags']):
@@ -138,7 +138,7 @@ def getDatamuse():
                         if termsInString is not None:
                               startIndex = termsInString.start(0)
                               endIndex = termsInString.end(0)
-                              if filterWordByDefinition(definition, startIndex, endIndex):
+                              if isValidDefinition(definition, startIndex, endIndex):
                                   wordSet.add(word)
                                   words.append({
                                     'word': word,
@@ -173,7 +173,7 @@ def getWebster():
             termsInString = pattern.search(definition.lower())
             word = result.lower()
             termsInWord = getWordPattern(gender).search(word)
-            if (word not in wordSet and word not in discardSet and filterByWord(word)):
+            if (word not in wordSet and word not in discardSet and isValidWord(word)):
                 if termsInWord is not None:
                         wordSet.add(word)
                         words.append({
@@ -187,7 +187,7 @@ def getWebster():
                     if (word not in wordSet and word not in discardSet):
                         startIndex = termsInString.start(0)
                         endIndex = termsInString.end(0)
-                        if filterWordByDefinition(definition, startIndex, endIndex):
+                        if isValidDefinition(definition, startIndex, endIndex):
                             # get part of speech
                             for ss in wn.synsets(result):
                                 pos = ss.pos()
@@ -224,7 +224,7 @@ def getGSFull():
     words = []
     for result in results:
       word = result.lower()
-      if (word not in wordSet and word not in discardSet and filterByWord(word)):
+      if (word not in wordSet and word not in discardSet and isValidWord(word)):
         termsInWord = getWordPattern(gender).search(word)
         definition = getWordDefinition(result)
         if (definition is not None and definition != ' '):
@@ -241,7 +241,7 @@ def getGSFull():
           if termsInString is not None:
             startIndex = termsInString.start(0)
             endIndex = termsInString.end(0)
-            if filterWordByDefinition(definition, startIndex, endIndex):
+            if isValidDefinition(definition, startIndex, endIndex):
               words.append({
                 'word': result,
                 'definition': definition,

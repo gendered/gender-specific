@@ -9,7 +9,7 @@ import re
 import string
 import exclude_words
 
-def filterByWord(word):
+def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
     if hasNumbers(word) or len(word.split) > 2:
@@ -21,7 +21,7 @@ def preprocess(sentence):
     translator = str.maketrans('', '', string.punctuation)
     return sentence.translate(translator)
 
-def filterWordByDefinition(definition, startIndex, endIndex):
+def isValidDefinition(definition, startIndex, endIndex):
     # remove word with any of these terms
     def hasWordsToExclude():
         f = open('pattern.txt','r')
@@ -29,14 +29,6 @@ def filterWordByDefinition(definition, startIndex, endIndex):
         rgex = re.compile(terms)
         termInDef = rgex.search(definition)
         if termInDef is not None:
-            return True
-        return False
-
-    # remove entries with animals in definition
-    def isThereAnimal():
-        animalRegex = re.compile(animals)
-        animalInDef = animalRegex.search(definition)
-        if animalInDef is not None:
             return True
         return False
 
@@ -89,11 +81,7 @@ def filterWordByDefinition(definition, startIndex, endIndex):
             else:
                 return True
 
-    if not isThereAnimal() and not hasWordsToExclude() and sentenceIsRightStructure():
+    if not hasWordsToExclude() and sentenceIsRightStructure():
         return True
     else:
         return False
-
-with open('data/animals.json') as f:
-    animals = json.load(f)
-    animals = ("|".join(r'\b' + animal.lower() + r'\b' for animal in animals))

@@ -20,11 +20,17 @@ def hasWordsToExclude(word, definition):
     if termInDef is not None:
         start = termInDef.start(0)
         end = termInDef.end(0)
-        print('found', word, definition[start:end])
-    #     return True
-    # return False
+        return True
+    return False
 
-def isGendered(definition):
+def isValidWord(word):
+    def hasNumbers(inputString):
+        return any(char.isdigit() for char in inputString)
+    if hasNumbers(word) or len(word.split) > 2:
+        return False
+    return True
+
+def isGendered(word, definition):
     terms = r"""\b[\w-]*woman\b[^'-]|\bfemale\b|\b[\w-]girl\b|\bgirls\b
     |\b[\w-]*women\b[^'-]|\blady\b[^'-]|\b[\w-]*mother\b[^'-]|\b[\w-]*daughter\b|\bwife\b|
     \bman\b[^'-]|\bmale\b|\bboy\b|\bmen\b[^'-]|\bboys\b|\bson\b|\b[\w-]*father\b|\bhusband\b"""
@@ -33,13 +39,15 @@ def isGendered(definition):
     if termsInDef is not None:
         return True
     else:
+        print(word, definition)
         return False
 
 for entry in all_words:
     word = entry['word']
-    definition = entry['definition']
-    if not hasWordsToExclude(word, definition):
-        all.append(entry)
+    if isValidWord(word):
+        definition = entry['definition']
+        if not hasWordsToExclude(word, definition) and isGendered(word, definition):
+            all.append(entry)
     else:
         discard.append(entry)
 
