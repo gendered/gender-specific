@@ -29,20 +29,29 @@ def findSingularWord(word):
     p = inflect.engine()
     return p.singular_noun(word)
 
-def getCollins():
+def getWordnikLists():
+    # wordnik dictionary
+    urls = ['https://www.wordnik.com/lists/biology-1-unit-2--cells',
+    'https://www.wordnik.com/lists/biolorgy',
+    'https://www.wordnik.com/lists/genetics',
+    return scrapePage(urls, 'li.word > a')
+
+def getCollinsLists():
     # collins dictionary
     urls = ['https://www.collinsdictionary.com/us/word-lists/clothing-articles-of-clothing',
     'https://www.collinsdictionary.com/us/word-lists/body-parts-of-the-body',
-    'https://www.collinsdictionary.com/us/word-lists/animal-collective-animals',
     'https://www.collinsdictionary.com/us/word-lists/animal-female',
     'https://www.collinsdictionary.com/us/word-lists/animal-male']
+    return scrapePage(urls, 'span.td > a')
+
+def scrapePage(urls, selector):
     s = ''
-    for site in urls:
+    for site, i in enumerate(urls):
         try:
             req = urllib.request.Request(site, headers=hdr)
             page = urllib.request.urlopen(req, context=context)
             soup = BeautifulSoup(page, 'html.parser')
-            words = soup.select('span.td > a')
+            words = soup.select(selector)
             for index, word in enumerate(words):
                 word = word.get_text()
                 if ' ' in word:
@@ -54,13 +63,14 @@ def getCollins():
         except urllib.request.URLError:
             raise MyException("There was an error: %r" % e)
     return s
+
 patternOne = r"""
 \bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|[\-]?cell[\-]?|
 \bman or woman\b|\bmen or women\b|\banimals\b|\bplant\b|gamete|\begg\b|\bcell\b|
 \bsyndrome\b|\bsexes\b|\b'male and female\b|mammal|nucleus|"""
 
-patternTwo = getCollins()
+patternTwo = getCollinsLists() + getWordnikLists()
 
-f = open('pattern.txt','a')
+f = open('pattern.txt','w')
 f.write(patternOne + patternTwo)
 f.close()
