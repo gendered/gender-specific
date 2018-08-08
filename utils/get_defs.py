@@ -1,10 +1,12 @@
-
 from dotenv import load_dotenv
 from wordnik import *
 from PyDictionary import PyDictionary
 import requests
 from wiktionaryparser import WiktionaryParser
 from vocabulary.vocabulary import Vocabulary as vb
+import os
+import json
+import re
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '../')   # refers to application_top

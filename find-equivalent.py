@@ -11,8 +11,9 @@ import requests
 import os
 from wiktionaryparser import WiktionaryParser
 import sys
+
 sys.path.insert(0, 'utils/')
-import get_defs
+from get_defs import getWordDefinition
 from vocabulary.vocabulary import Vocabulary as vb
 
 # load dotenv in the base root
@@ -139,12 +140,11 @@ def findGenderEquivalent(word, gender):
 if __name__ == "__main__":
     defineWordEquivalent()
     for entry in all:
-        if 'equivalent' in entry:
+        if 'equivalent' not in entry:
             word = entry['word']
             gender = entry['gender']
             equiv = findGenderEquivalent(word, gender)
             if equiv != ' ' and equiv is not None:
                 entry['equivalent'] = equiv
-                all[equiv] = word
 
     writeToJson('words/all', all)
