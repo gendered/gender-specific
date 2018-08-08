@@ -7,6 +7,7 @@ from nltk.stem import *
 import io
 import re
 import string
+import exclude_words
 
 def filterByWord(word):
     def hasNumbers(inputString):
@@ -14,40 +15,6 @@ def filterByWord(word):
     if hasNumbers(word) or len(word.split) > 2:
         return False
     return True
-
-def stem(a):
-    p = nltk.PorterStemmer()
-    [p.stem(word) for word in a]
-    return a
-
-def getCollinsTerms():
-    # collins dictionary
-    urls = ['https://www.collinsdictionary.com/us/word-lists/clothing-articles-of-clothing',
-    'https://www.collinsdictionary.com/us/word-lists/body-parts-of-the-body',
-    'https://www.collinsdictionary.com/us/word-lists/animal-collective-animals',
-    'https://www.collinsdictionary.com/us/word-lists/animal-female',
-    'https://www.collinsdictionary.com/us/word-lists/animal-male']
-    for site in urls:
-        req = urllib2.Request(site, headers=hdr)
-        page = urllib2.urlopen(req)
-        soup = BeautifulSoup(page, 'html.parser')
-        words = soup.find_all('span', attrs={'class': 'td'})
-        words = stem([word.get_text() for word in words])
-    return listToRegexStr(words)
-
-def getWordnikTerms():
-    # wordnik lists
-    urls = ['https://www.wordnik.com/lists/clothing-or-dress', 'https://www.wordnik.com/lists/clothing--5',
-     'https://www.wordnik.com/lists/clothing-textiles', 'https://www.wordnik.com/lists/genetics',
-     'https://www.wordnik.com/lists/biolorgy', 'https://www.wordnik.com/lists/biology-1-unit-2--cells']
-
-    for site in urls:
-        req = urllib2.Request(site, headers=hdr)
-        page = urllib2.urlopen(req)
-        soup = BeautifulSoup(page, 'html.parser')
-        words = soup.find_all('li', attrs={'class': 'word'})
-        words = [word.get_text() for word in words]
-    return listToRegexStr(words)
 
 def preprocess(sentence):
     sentence = sentence.lower()
@@ -57,11 +24,9 @@ def preprocess(sentence):
 def filterWordByDefinition(definition, startIndex, endIndex):
     # remove word with any of these terms
     def hasWordsToExclude():
-        terms = r"""\bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|
-         [\-]?cell[\-]?|\bman or woman\b|\bmen or women\b|\banimals\b|\bplant\b|
-         gamete|\begg\b|\bcell\b|\bsyndrome\b|\bsexes\b|\b'male and female\b|mammal|nucleus|""" + getCollinsTerms() + getWordnikTerms()
-
-        rgex = re.compile(arr)
+        f = open('pattern.txt','r')
+        terms = f.read().replace('\n', '')
+        rgex = re.compile(terms)
         termInDef = rgex.search(definition)
         if termInDef is not None:
             return True

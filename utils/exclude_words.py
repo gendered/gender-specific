@@ -66,13 +66,17 @@ def scrapePage(urls, selector):
             print('URLError = ' + str(e.reason))
     return s
 
-patternOne = r"""
+pattern = r"""
 \bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|[\-]?cell[\-]?|
 \bman or woman\b|\bmen or women\b|\banimals\b|\bplant\b|gamete|\begg\b|\bcell\b|
-\bsyndrome\b|\bsexes\b|\b'male and female\b|mammal|nucleus|"""
+\bsyndrome\b|\bsexes\b|\bmale and female\b|mammal|nucleus|"""
 
-patternTwo = getCollinsLists() + getWordnikLists()
+with open('../data/animals.json') as f:
+    animals = json.load(f)
+    pattern += listToRegexStr(animals)
+
+pattern += getCollinsLists() + getWordnikLists()
 
 f = open('pattern.txt','w')
-f.write(patternOne + patternTwo)
+f.write(pattern)
 f.close()
