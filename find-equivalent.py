@@ -10,7 +10,9 @@ from PyDictionary import PyDictionary
 import requests
 import os
 from wiktionaryparser import WiktionaryParser
-from utils/defs import getWordDefinition
+import sys
+sys.path.insert(0, 'utils/')
+import defs
 from vocabulary.vocabulary import Vocabulary as vb
 
 # load dotenv in the base root

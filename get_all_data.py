@@ -18,9 +18,11 @@ from vocabulary.vocabulary import Vocabulary as vb
 import io
 import re
 import string
-from utils/defs import getWordDefinition
-from utils/filter import isValidWord
-from utils/filter import isValidDefinition
+import sys
+sys.path.insert(0, 'utils/')
+from defs import getWordDefinition
+from filter import isValidWord
+from filter import isValidDefinition
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
