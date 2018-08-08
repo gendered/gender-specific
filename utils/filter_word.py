@@ -12,7 +12,7 @@ import exclude_words
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or len(word.split) > 2:
+    if hasNumbers(word) or len(word.split()) > 2:
         return False
     return True
 

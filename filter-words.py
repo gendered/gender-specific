@@ -26,7 +26,7 @@ def hasWordsToExclude(word, definition):
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or len(word.split) > 2:
+    if hasNumbers(word) or len(word.split()) > 2:
         return False
     return True
 
@@ -46,10 +46,10 @@ for entry in all_words:
     word = entry['word']
     if isValidWord(word):
         definition = entry['definition']
-        if not hasWordsToExclude(word, definition) and isGendered(word, definition):
+        if isGendered(word, definition):
             all.append(entry)
     else:
         discard.append(entry)
 
-writeToJson('words/filtered/discard-2', discard)
-writeToJson('words/filtered/all-2', all)
+# writeToJson('words/filtered/discard-2', discard)
+# writeToJson('words/filtered/all-2', all)
