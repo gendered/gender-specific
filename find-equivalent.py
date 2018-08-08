@@ -10,7 +10,7 @@ from PyDictionary import PyDictionary
 import requests
 import os
 from wiktionaryparser import WiktionaryParser
-from get_all_data import getWordDefinition
+from utils/defs import getWordDefinition
 from vocabulary.vocabulary import Vocabulary as vb
 
 # load dotenv in the base root
@@ -104,7 +104,7 @@ def findGenderEquivalent(word, gender):
                 return equivalent
         return ' '
 
-    def getGoogleNews():      
+    def getGoogleNews():
         if word in model.vocab:
             if (gender == 'female'):
                 pos = 'man'
@@ -124,7 +124,7 @@ def findGenderEquivalent(word, gender):
                         return checkEquivalent(equivalent)
         return ' '
 
-    
+
     for term in wordOpposites:
         if term == 'word':
             return wordOpposites[term]

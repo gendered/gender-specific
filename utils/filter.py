@@ -49,6 +49,10 @@ def getWordnikTerms():
         words = [word.get_text() for word in words]
     return listToRegexStr(words)
 
+def preprocess(sentence):
+    sentence = sentence.lower()
+    translator = str.maketrans('', '', string.punctuation)
+    return sentence.translate(translator)
 
 def filterWordByDefinition(definition, startIndex, endIndex):
     # remove word with any of these terms
@@ -70,11 +74,6 @@ def filterWordByDefinition(definition, startIndex, endIndex):
         if animalInDef is not None:
             return True
         return False
-
-    def preprocess(sentence):
-        sentence = sentence.lower()
-        translator = str.maketrans('', '', string.punctuation)
-        return sentence.translate(translator)
 
     # ignore 'the', 'a' and 'an'
     def filterTags(tags):

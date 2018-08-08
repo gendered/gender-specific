@@ -18,6 +18,10 @@ from vocabulary.vocabulary import Vocabulary as vb
 import io
 import re
 import string
+from utils/defs import getWordDefinition
+from utils/filter import filterByWord
+from utils/filter import filterWordByDefinition
+
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
 dotenv_path = os.path.join(APP_ROOT, '.env')
@@ -274,8 +278,6 @@ def getUrbanDictionary():
 
   # only include entries with more than 1000 upvotes
   ub = ub[ub['thumbs_up'] >= 1000]
-
-  # TODO: other ways to filter data?
   # remove duplicates
   ub = ub[~ub[['word']].apply(lambda x: x.str.lower().str.replace(" ","")).duplicated()]
 
