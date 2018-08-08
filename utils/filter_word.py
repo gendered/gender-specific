@@ -89,7 +89,14 @@ def isValidDefinition(definition, startIndex, endIndex):
             else:
                 return True
 
-    if not hasWordsToExclude() and sentenceIsRightStructure():
+    def isTermPossessive():
+        if len(definition) != endIndex:
+            last = definition[endIndex]
+            if last == "'" or last == '-':
+                return False
+        return True
+            
+    if not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
         return True
     else:
         return False
