@@ -147,4 +147,4 @@ if __name__ == "__main__":
             if equiv != ' ' and equiv is not None:
                 entry['equivalent'] = equiv
 
-    writeToJson('words/all-2', all)
+    writeToJson('words/all', all)
