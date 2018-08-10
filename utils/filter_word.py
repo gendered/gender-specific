@@ -20,7 +20,7 @@ def hasGenderedTerm(word):
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or not hasGenderedTerm(word):
+    if hasNumbers(word) or not word[0].isalpha() or not hasGenderedTerm(word):
         return False
     return True
 
