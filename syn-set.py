@@ -1,4 +1,7 @@
 import json
+from gensim.models import KeyedVectors
+filename = 'models/GoogleNews-vectors-negative300.bin'
+model = KeyedVectors.load_word2vec_format(filename, binary=True)
 import os
 from pprint import pprint
 from vocabulary.vocabulary import Vocabulary as vb
