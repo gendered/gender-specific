@@ -104,6 +104,8 @@ def findGenderEquivalent(word, gender):
             equivalent = word[0:startIndex]
             if equivalent in all_words_only:
                 return equivalent
+            return checkEquivalent(equivalent)
+
         return ' '
 
     def getGoogleNews():
