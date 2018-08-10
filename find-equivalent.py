@@ -67,14 +67,14 @@ def findGenderEquivalent(word, gender):
                 femaleTerms = r'\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b'
                 femaleRegex = re.compile(femaleTerms)
                 termsInString = femaleRegex.search(definition)
-            if termsInString is not None:
-                all.append({
-                    'word': equivalent,
-                    'definition': definition,
-                    'gender': opp_gender
-                })
-                all_words_only.append(equivalent)
-                return equivalent
+            all.append({
+                'word': equivalent,
+                'definition': definition,
+                'gender': opp_gender,
+                'note': 'neg'
+            })
+            all_words_only.append(equivalent)
+            return equivalent
         return ' '
 
     # Check if opposite of word can be found using the word itself.
