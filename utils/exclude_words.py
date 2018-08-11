@@ -71,7 +71,6 @@ pattern = r"""
 \bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|[\-]?cell[\-]?|
 \bman or woman\b|\bmen or women\b|\banimals\b|\bplant\b|gamete|
 \bsyndrome\b|\bsexes\b|\bmale and female\b|mammal|nucleus|"""
-print(os.path.abspath('data/animals.json'))
 
 #
 # with open('../data/animals.json') as f:

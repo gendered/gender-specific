@@ -8,6 +8,7 @@ import io
 import re
 import string
 import exclude_words
+import os 
 
 def hasGenderedTerm(word):
     s = r"""\b[\w]*?woman\b|\b[\w]*?girl|\b[\w]*?women\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\b[\w]*?man\b|\b[\w]*?boy\b|\b[\w]*?men\b|\b[\w]*?son\b|\b[\w]*?father\b|\b[\w]*?husband\b"""
@@ -32,7 +33,8 @@ def preprocess(sentence):
 def isValidDefinition(definition, startIndex, endIndex):
     # remove word with any of these terms
     def hasWordsToExclude():
-        f = open('pattern.txt','r')
+        path = os.getcwd() + '/utils/pattern.txt'
+        f = open(path, 'r')
         terms = f.read().replace('\n', '')
         rgex = re.compile(terms)
         termInDef = rgex.search(definition)

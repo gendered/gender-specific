@@ -31,18 +31,18 @@ def getWordDefinition(word):
 
     # wordnik dictionary
     wordApi = WordApi.WordApi(client)
-    definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
-
-    if definition is not None:
-      return definition[0].text
-
-    meaningsList = vb.meaning(word)
-    if meaningsList != False:
-      defs = json.loads(meaningsList)
-      if (len(defs) > 0):
-        definition = defs[0]['text']
-        # some of the definitions have html tags
-        return re.sub('<[^<]+?>', '', definition)
+    try:
+      definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
+      if definition is not None:
+        return definition[0].text
+    except:
+      meaningsList = vb.meaning(word)
+      if meaningsList != False:
+        defs = json.loads(meaningsList)
+        if (len(defs) > 0):
+          definition = defs[0]['text']
+          # some of the definitions have html tags
+          return re.sub('<[^<]+?>', '', definition)
 
     try:
       # wiktionary
