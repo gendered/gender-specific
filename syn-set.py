@@ -20,11 +20,9 @@ with open('words/all.json') as f:
 		word = entry['word']
 		wordObj[word] = entry
 
-
-allSets = []
-wordsInSet = set()
-wordsInSet |= set([entry['word'] for entry in all])
-
+with open('words/word-sets.json') as f:
+	allSets = json.load(f)
+	
 def writeToJson(path, set):
 	with open(path + '.json', 'w') as outfile:
 		json.dump(set, outfile)
@@ -89,6 +87,9 @@ def isSameGender(word, gender, syn):
 
 
 def createSets(words):
+	allSets = []
+	wordsInSet = set()
+	wordsInSet |= set([entry['word'] for entry in all])
 	end = len(words)
 	for count, entry in enumerate(words):
 		word = entry['word']
@@ -110,12 +111,21 @@ def createSets(words):
 					if isNoun(syn) and isGendered(syn, gender) and isSameGender(word, gender, syn)[1]:
 						synonyms_set.add(syn)
 			if len(synonyms_set) > 1:
-				allSets.append({
-					"gender": gender,
-					"words": list(synonyms_set)
-				})
+				allSets.append(list(synonyms_set))
+	return allSets
+
+def addSetsToWords(words, wordSets):
+	for entry in words:
+		word = [entry['word']]
+		wordSyns = set()
+		for wordSet in wordSets:
+			syns = wordSet
+			# check if there's a match 
+			matches = set(word).intersection(set(syns))
+			if len(matches) > 0:
+				wordSyns |= set(syns)
+		entry['syns'] = list(wordSyns)
 
 if __name__ == "__main__":
-	createSets(all)
-	writeToJson('words/word-sets', allSets)
+	addSetsToWords(all, allSets)
 	writeToJson('words/all', all)
