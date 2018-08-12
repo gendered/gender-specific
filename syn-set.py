@@ -20,7 +20,8 @@ with open('words/all.json') as f:
 		word = entry['word']
 		wordObj[word] = entry
 
-allSets = {}
+
+allSets = []
 wordsInSet = set()
 wordsInSet |= set([entry['word'] for entry in all])
 
@@ -81,15 +82,14 @@ def isSameGender(word, gender, syn):
 			for wordToSearch in searches:
 				try:
 					syn_gender = wordObj[wordToSearch]['gender']
-					return syn_gender == gender
+					return (wordToSearch, syn_gender == gender)
 				except KeyError:
 					continue
-	return wordObj[syn]['gender'] == gender
+	return (syn, wordObj[syn]['gender'] == gender)
 
 
 def createSets(words):
 	end = len(words)
-	i = 0
 	for count, entry in enumerate(words):
 		word = entry['word']
 		gender = entry['gender']
@@ -100,15 +100,20 @@ def createSets(words):
 		if (synonyms != ' ' and synonyms != []):
 			for syn in synonyms:
 				syn = syn.lower()
-				if syn in wordsInSet and isSameGender(word, gender, syn):
-					synonyms_set.add(syn)
+				if syn in wordsInSet:
+					result = isSameGender(word, gender, syn)
+					sameGender = result[1]
+					syn = result[0]
+					if sameGender:
+						synonyms_set.add(syn)
 				elif syn not in wordsInSet:
-					if isNoun(syn) and isGendered(syn, gender):
+					if isNoun(syn) and isGendered(syn, gender) and isSameGender(word, gender, syn)[1]:
 						synonyms_set.add(syn)
 			if len(synonyms_set) > 1:
-				print(synonyms_set)
-				allSets[str(i)] = (list(synonyms_set))
-				i += 1
+				allSets.append({
+					"gender": gender,
+					"words": list(synonyms_set)
+				})
 
 if __name__ == "__main__":
 	createSets(all)
