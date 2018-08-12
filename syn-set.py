@@ -90,7 +90,7 @@ def isSameGender(word, gender, syn):
 def createSets(words):
 	end = len(words)
 	i = 0
-	for count, entry in enumerate(words[index:end]):
+	for count, entry in enumerate(words):
 		word = entry['word']
 		gender = entry['gender']
 		# create set with word
