@@ -125,7 +125,5 @@ def addSetsToWords(words, wordSets):
 		entry['syns'] = list(wordSyns)
 
 if __name__ == "__main__":
-	addSetsToWords(all, allSets)
+	createSets(all)
 	writeToJson('words/all', all)
-	print(getSynonyms('woman of the streets'))
-	print(getSynonyms('sex kitten'))
