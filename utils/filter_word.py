@@ -17,7 +17,7 @@ def searchTextForGenderedTerm(text, gender=None):
     m_pattern = re.compile(ms)
     femalePosition = f_pattern.search(text)
     malePosition = m_pattern.search(text)
-    if gender is None:
+    if gender is None or (femalePosition is not None and malePosition is not None):
         gender = getEarlierIndex(femalePosition, malePosition)
     if gender == 'female' and femalePosition is not None:
         return (True, gender, femalePosition)

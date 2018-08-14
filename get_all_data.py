@@ -49,6 +49,7 @@ def getWordnik():
   wordsApi = WordsApi.WordsApi(client)
   source = 'wordnik'
   def callApi(terms, gender):
+    print('in wordnik')
     words = []
     for term in terms:
       reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
@@ -59,7 +60,7 @@ def getWordnik():
           termInWord = searchTextForGenderedTerm(word, gender)
           if termInWord is not None and termInWord[0]:
             wordSet.add(word)
-            words.append({
+            allWords.append({
               'word': word,
               'definition': definition,
               'gender': gender,
@@ -73,7 +74,7 @@ def getWordnik():
             endIndex = location.end(0)
             if isValidDefinition(definition, startIndex, endIndex):
               wordSet.add(word)
-              words.append({
+              allWords.append({
                 'word': word,
                 'definition': definition,
                 'gender': gender,
@@ -87,7 +88,6 @@ def getWordnik():
                 'gender': gender,
                 'tags': [source]
               })
-    allWords.extend(words)
 
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')
@@ -114,7 +114,7 @@ def getDatamuse():
               termInWord = searchTextForGenderedTerm(word, gender)
               if termInWord is not None and termInWord[0]:
                 wordSet.add(word)
-                words.append({
+                allWords.append({
                   'word': word,
                   'definition': definition,
                   'gender': gender,
@@ -128,7 +128,7 @@ def getDatamuse():
                 endIndex = location.end(0)
                 if isValidDefinition(definition, startIndex, endIndex):
                     wordSet.add(word)
-                    words.append({
+                    allWords.append({
                       'word': word,
                       'definition': definition,
                       'gender': gender,
@@ -142,7 +142,6 @@ def getDatamuse():
                     'gender': gender,
                     'tags': [source]
                   })
-    allWords.extend(words)
 
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')
@@ -161,7 +160,7 @@ def getWebster():
       termInWord = searchTextForGenderedTerm(word)
       if termInWord is not None and termInWord[0]:
         wordSet.add(word)
-        words.append({
+        allWords.append({
             'word': word,
             'definition': definition,
             'gender': termInWord[1],
@@ -180,7 +179,7 @@ def getWebster():
             pos = ss.pos()
             if ('n' in pos):
               wordSet.add(result)
-              words.append({
+              allWords.append({
                 'word': result,
                 'definition': definition,
                 'gender': gender,
@@ -195,7 +194,7 @@ def getWebster():
             'gender': gender,
             'tags': [source]
           })
-
+  print('webster done')
 
 def getGSFull():
   with open('data/gender_specific_full.json', 'r') as f:
@@ -214,7 +213,7 @@ def getGSFull():
         termInWord = searchTextForGenderedTerm(word)
         if termInWord is not None and termInWord[0]:
           wordSet.add(word)
-          words.append({
+          allWords.append({
               'word': word,
               'definition': definition,
               'gender': termInWord[1],
@@ -228,7 +227,7 @@ def getGSFull():
           startIndex = location.start(0)
           endIndex = location.end(0)
           if isValidDefinition(definition, startIndex, endIndex):
-            words.append({
+            allWords.append({
               'word': result,
               'definition': definition,
               'gender': gender,
@@ -243,7 +242,6 @@ def getGSFull():
               'gender': gender,
               'tags': [source]
             })
-    allWords.extend(words)
   print ('gender specific done')
 
 def getUrbanDictionary():
@@ -281,6 +279,7 @@ def addTerms(terms, gender):
 if __name__ == "__main__":
   with open('words/all.json') as f:
     allWords = json.load(f)
+    print(len(allWords))
     wordSet = set(entry['word'] for entry in allWords)
 
   with open('words/discard.json') as f:
@@ -295,6 +294,6 @@ if __name__ == "__main__":
   getDatamuse()
   getGSFull()
   # getUrbanDictionary()
-
-  writeToJson('words/all', allWords)
+  print(len(allWords))
+  writeToJson('words/all-2', allWords)
   writeToJson('words/discard', discardSet)
