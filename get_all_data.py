@@ -38,7 +38,10 @@ client = swagger.ApiClient(apiKey, apiUrl)
 femaleTermsArr = ['woman', 'female', 'girl', 'lady', 'women', 'mother', 'daughter', 'wife']
 maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
-
+allWords = []
+discardSet = set()
+wordSet = set()
+discard = []
 # writes to a json file
 def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
@@ -50,7 +53,6 @@ def getWordnik():
   source = 'wordnik'
   def callApi(terms, gender):
     print('in wordnik')
-    words = []
     for term in terms:
       reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
       for result in reverseDictionary:
@@ -88,7 +90,6 @@ def getWordnik():
                 'gender': gender,
                 'tags': [source]
               })
-
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')
   print ('wordnik done')
@@ -98,7 +99,6 @@ def getDatamuse():
   api = datamuse.Datamuse()
   source = 'datamuse'
   def callApi(terms, gender):
-    words = []
     for term in terms:
       results = api.words(ml=term, max=1000, md='dp')
       for result in results:
@@ -151,7 +151,6 @@ def getWebster():
   with open('data/webster/dictionary.json', 'r') as f:
     results = json.load(f)
   source = 'webster'
-  words = []
   for result in results:
     # to-do: strip definition if it's too long
     definition = (results[result]).lower()
@@ -277,14 +276,14 @@ def addTerms(terms, gender):
 
 
 if __name__ == "__main__":
-  with open('words/all.json') as f:
-    allWords = json.load(f)
-    print(len(allWords))
-    wordSet = set(entry['word'] for entry in allWords)
+  # with open('words/all.json') as f:
+  #   allWords = json.load(f)
+  #   print(len(allWords))
+  #   wordSet = set(entry['word'] for entry in allWords)
 
-  with open('words/discard.json') as f:
-    discard = json.load(f)
-    discardSet = set(entry['word'] for entry in discard)
+  # with open('words/discard.json') as f:
+  #   discard = json.load(f)
+  #   discardSet = set(entry['word'] for entry in discard)
 
   # stuff only to run when not called via 'import' here
   addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
