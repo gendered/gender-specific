@@ -11,7 +11,8 @@ sys.path.insert(0, 'utils/')
 from get_defs import getWordDefinition
 from filter_word import isValidWord
 from filter_word import isValidDefinition
-from filter_word import hasGenderedTerm
+from filter_word import getGender
+from filter_word import findPattern
 import pandas as pd
 
 
@@ -48,17 +49,15 @@ def isNoun(word):
 		return False
 
 
-def isGendered(word, gender):
-	if isValidWord(word):
-		definition = getWordDefinition(word)
-		if gender == 'female':
-			pattern = re.compile(r'\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b')
-		elif gender == 'male':
-			pattern = re.compile(r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w]*?father\b|\bhusband\b')
-		termsInString = pattern.search(definition)
-		if termsInString is not None:
-			if isValidDefinition(definition, termsInString.start(0), termsInString.end(0)):
-				return True
+def isGendered(word, gender, definition):
+	if gender == 'female':
+		pattern = re.compile(r'\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b')
+	elif gender == 'male':
+		pattern = re.compile(r'\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w]*?father\b|\bhusband\b')
+	termsInString = pattern.search(definition)
+	if termsInString is not None:
+		if isValidDefinition(definition, termsInString.start(0), termsInString.end(0)):
+			return True
 	return False
 
 
@@ -91,23 +90,33 @@ def createSets(words):
 		if (synonyms):
 			for syn in synonyms:
 				syn = syn.lower()
-				if syn in wordsInSet:
-					result = isSameGender(word, gender, syn)
-					sameGender = result[1]
-					syn = result[0]
-					if sameGender:
-						synonyms_set.add(syn)
-						continue
-				elif syn not in wordsInSet:
-					if hasGenderedTerm(word) or (isNoun(syn) and isGendered(syn, gender) and isSameGender(word, gender, syn)[1]):
-						synonyms_set.add(syn)
-						all.append({
-							'word': word,
-							'definition': definition,
-							'gender': gender
-						})
-						wordsInSet.add(word)
-						continue
+				if isValidWord(syn):
+					if syn in wordsInSet:
+						result = isSameGender(word, gender, syn)
+						sameGender = result[1]
+						syn = result[0]
+						if sameGender:
+							synonyms_set.add(syn)
+							continue
+					elif syn not in wordsInSet:
+						if not isNoun(syn):
+							continue
+						definition = getWordDefinition(word)
+						if definition != ' ':
+							result = getGender(word)
+							if result is not None:
+								isGenderedTerm = result[0]
+								if isGenderedTerm:
+									all.append({
+										'word': word,
+										'definition': definition,
+										'gender': result[1]
+									})
+									wordsInSet.add(word)
+									continue
+							if isNoun(syn) and isGendered(syn, gender, definition):
+								synonyms_set.add(syn)
+
 			if len(synonyms_set) > 1:
 				allSets.append(list(synonyms_set))
 	return allSets

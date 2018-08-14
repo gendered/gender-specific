@@ -10,18 +10,40 @@ import string
 import exclude_words
 import os 
 
-def hasGenderedTerm(word):
-    s = r"""\b[\w]*?woman\b|\b[\w]*?girl|\b[\w]*?women\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\b[\w]*?man\b|\b[\w]*?boy\b|\b[\w]*?men\b|\b[\w]*?son\b|\b[\w]*?father\b|\b[\w]*?husband\b"""
-    pattern = re.compile(s)
-    termsInWord = pattern.search(word)
-    if termsInWord is not None:
-        return True
-    return False
+def searchTextForGenderedTerm(text, gender=None):
+    fs = r"""\b[\w]*?woman\b|\b[\w]*?girl|\b[\w]*?women\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b"""
+    ms = r"""\b[\w]*?man\b|\b[\w]*?boy\b|\b[\w]*?men\b|\b[\w]*?son\b|\b[\w]*?father\b|\b[\w]*?husband\b"""
+    f_pattern = re.compile(fs)
+    m_pattern = re.compile(ms)
+    femalePosition = f_pattern.search(text)
+    malePosition = m_pattern.search(text)
+    if gender is None:
+        gender = getEarlierIndex(femalePosition, malePosition)
+    if gender == 'female' and femalePosition is not None:
+        return (True, gender, femalePosition)
+    elif gender == 'male' and malePosition is not None:
+        return (True, gender, malePosition)
+    return None
+
+def getEarlierIndex(femalePosition, malePosition):
+    if femalePosition is None and malePosition is None:
+        return None
+    if femalePosition is not None and malePosition is not None:
+        femaleStart = femalePosition.start(0)
+        maleStart = malePosition.start(0)
+        if femaleStart < maleStart:
+            return 'female'
+        return 'male'
+    elif malePosition is None:
+        return 'female'
+    elif femalePosition is None:
+        return 'male'
+
 
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or not word[0].isalpha() or not hasGenderedTerm(word):
+    if hasNumbers(word) or not word[0].isalpha():
         return False
     return True
 

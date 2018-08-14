@@ -23,6 +23,7 @@ sys.path.insert(0, 'utils/')
 from get_defs import getWordDefinition
 from filter_word import isValidWord
 from filter_word import isValidDefinition
+from filter_word import searchTextForGenderedTerm
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
@@ -43,23 +44,6 @@ def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
       json.dump(list(set), outfile)
 
-def findPattern(definition, gender):
-  if gender == 'female':
-    femaleTerms = r"""\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b"""
-    pattern = re.compile(femaleTerms)
-  elif gender == 'male':
-    maleTerms = r"""\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w]*?father\b|\bhusband\b"""
-    pattern = re.compile(maleTerms)
-  else:
-    terms = r"""\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\bman\b|\bmale\b|\bboy\b|\bmen\b|\bboys\b|\bson\b|\b[\w]*?father\b|\bhusband\b"""
-    pattern = re.compile(maleTerms)
-  termsInString = pattern.search(definition)
-  if termsInString is not None:
-    startIndex = termsInString.start(0)
-    endIndex = termsInString.end(0)
-    return (startIndex, endIndex)
-  else return termsInString
-
 # get words from wordnik
 def getWordnik():
   wordsApi = WordsApi.WordsApi(client)
@@ -67,41 +51,43 @@ def getWordnik():
   def callApi(terms, gender):
     words = []
     for term in terms:
-        reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
-        for result in reverseDictionary:
-            word = result.word.lower()
-            definition = (result.text).lower()
-            if (word not in wordSet and word not in discardSet):
-                if isValidWord(word):
-                    wordSet.add(word)
-                    words.append({
-                      'word': word,
-                      'definition': definition,
-                      'gender': gender,
-                      'tags': [source]
-                    })
-                    continue
-                termsInString = findPattern(definition, gender)
-                if termsInString is not None:
-                    startIndex = termsInString[0]
-                    endIndex = termsInString[1]
-                    if isValidDefinition(definition, startIndex, endIndex):
-                        wordSet.add(word)
-                        words.append({
-                          'word': word,
-                          'definition': definition,
-                          'gender': gender,
-                          'tags': [source]
-                        })
-                    else:
-                      discardSet.add(word)
-                      discard.append({
-                        'word': word,
-                        'definition': definition,
-                        'gender': gender,
-                        'tags': [source]
-                      })
-    allWords.extend(words)
+      reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
+      for result in reverseDictionary:
+        word = result.word.lower()
+        definition = (result.text).lower()
+        if (word not in wordSet and word not in discardSet and isValidWord(word)):
+          termInWord = searchTextForGenderedTerm(word, gender)
+          if termInWord is not None and termInWord[0]:
+            wordSet.add(word)
+            words.append({
+              'word': word,
+              'definition': definition,
+              'gender': gender,
+              'tags': [source]
+            })
+            continue
+          termsInString = searchTextForGenderedTerm(definition, gender)
+          if termsInString is not None:
+            location = termsInString[2]
+            startIndex = location.start(0)
+            endIndex = location.end(0)
+            if isValidDefinition(definition, startIndex, endIndex):
+              wordSet.add(word)
+              words.append({
+                'word': word,
+                'definition': definition,
+                'gender': gender,
+                'tags': [source]
+              })
+            else:
+              discardSet.add(word)
+              discard.append({
+                'word': word,
+                'definition': definition,
+                'gender': gender,
+                'tags': [source]
+              })
+    # allWords.extend(words)
 
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')
@@ -117,7 +103,7 @@ def getDatamuse():
       results = api.words(ml=term, max=1000, md='dp')
       for result in results:
         word = result['word'].lower()
-        if (word not in wordSet and word not in discardSet):
+        if (word not in wordSet and word not in discardSet and isValidWord(word)):
           # check if it's a noun
           if ('tags' in result and 'n' in result['tags']):
             if ('defs' in result):
@@ -125,7 +111,8 @@ def getDatamuse():
             else:
                 definition = getWordDefinition(word)
             if (definition != ' '):
-              if isValidWord(word):
+              termInWord = searchTextForGenderedTerm(word, gender)
+              if termInWord is not None and termInWord[0]:
                 wordSet.add(word)
                 words.append({
                   'word': word,
@@ -134,26 +121,27 @@ def getDatamuse():
                   'tags': [source]
                 })
                 continue
-              termsInString = findPattern(definition, gender)
-                if termsInString is not None:
-                  startIndex = termsInString[0]
-                  endIndex = termsInString[1]
-                  if isValidDefinition(definition, startIndex, endIndex):
-                      wordSet.add(word)
-                      words.append({
-                        'word': word,
-                        'definition': definition,
-                        'gender': gender,
-                        'tags': [source]
-                      })
-                  else:
-                    discardSet.add(word)
-                    discard.append({
+              termsInString = searchTextForGenderedTerm(definition, gender)
+              if termsInString is not None:
+                location = termsInString[2]
+                startIndex = location.start(0)
+                endIndex = location.end(0)
+                if isValidDefinition(definition, startIndex, endIndex):
+                    wordSet.add(word)
+                    words.append({
                       'word': word,
                       'definition': definition,
                       'gender': gender,
                       'tags': [source]
                     })
+                else:
+                  discardSet.add(word)
+                  discard.append({
+                    'word': word,
+                    'definition': definition,
+                    'gender': gender,
+                    'tags': [source]
+                  })
     allWords.extend(words)
 
   callApi(femaleTermsArr, 'female')
@@ -161,56 +149,53 @@ def getDatamuse():
   print ('datamuse done')
 
 def getWebster():
-    with open('data/webster/dictionary.json', 'r') as f:
-      results = json.load(f)
-    source = 'webster'
+  with open('data/webster/dictionary.json', 'r') as f:
+    results = json.load(f)
+  source = 'webster'
+  words = []
+  for result in results:
+    # to-do: strip definition if it's too long
+    definition = (results[result]).lower()
+    word = result.lower()
+    if (word not in wordSet and word not in discardSet and isValidWord(word)):
+      termInWord = searchTextForGenderedTerm(word)
+      if termInWord is not None and termInWord[0]:
+        wordSet.add(word)
+        words.append({
+            'word': word,
+            'definition': definition,
+            'gender': termInWord[1],
+            'tags': [source]
+        })
+        continue
+      termsInString = searchTextForGenderedTerm(definition)
+      if termsInString is not None:
+        gender = termsInString[1]
+        location = termsInString[2]
+        startIndex = location.start(0)
+        endIndex = location.end(0)
+        if isValidDefinition(definition, startIndex, endIndex):
+          # get part of speech
+          for ss in wn.synsets(result):
+            pos = ss.pos()
+            if ('n' in pos):
+              wordSet.add(result)
+              words.append({
+                'word': result,
+                'definition': definition,
+                'gender': gender,
+                'tags': [source]
+              })
+              continue
+        else:
+          discardSet.add(word)
+          discard.append({
+            'word': word,
+            'definition': definition,
+            'gender': gender,
+            'tags': [source]
+          })
 
-    def bucket(pattern, gender):
-        words = []
-        for result in results:
-            # to-do: strip definition if it's too long
-            definition = (results[result]).lower()
-            word = result.lower()
-            if (word not in wordSet and word not in discardSet):
-              if isValidWord(word):
-                wordSet.add(word)
-                words.append({
-                    'word': word,
-                    'definition': definition,
-                    'gender': gender,
-                    'tags': [source]
-                })
-                continue
-              termsInString = findPattern(definition, gender)
-              if termsInString is not None:
-                  startIndex = termsInString[0]
-                  endIndex = termsInString[1]
-                  if isValidDefinition(definition, startIndex, endIndex):
-                    # get part of speech
-                    for ss in wn.synsets(result):
-                      pos = ss.pos()
-                      if ('n' in pos):
-                        wordSet.add(result)
-                        words.append({
-                          'word': result,
-                          'definition': definition,
-                          'gender': gender,
-                          'tags': [source]
-                        })
-                        continue
-                  else:
-                    discardSet.add(word)
-                    discard.append({
-                      'word': word,
-                      'definition': definition,
-                      'gender': gender,
-                      'tags': [source]
-                    })
-
-
-    bucket('female')
-    bucket('male')
-    print ('webster done')
 
 def getGSFull():
   with open('data/gender_specific_full.json', 'r') as f:
@@ -219,46 +204,46 @@ def getGSFull():
   source = 'debiaswe'
   # all words in this file are gendered, so put the ones we can't get definitions for
   # in a separate file we will address later
-  def bucket(pattern, gender):
-    words = []
-    for result in results:
-      word = result.lower()
-      if (word not in wordSet and word not in discardSet):
-        definition = getWordDefinition(result)
-        if (definition is not None and definition != ' '):
-          definition = definition.lower()
-          if isValidWord(word):
-            wordSet.add(word)
+  words = []
+  for result in results:
+    word = result.lower()
+    if (word not in wordSet and word not in discardSet and isValidWord(word)):
+      definition = getWordDefinition(result)
+      if (definition is not None and definition != ' '):
+        definition = definition.lower()
+        termInWord = searchTextForGenderedTerm(word)
+        if termInWord is not None and termInWord[0]:
+          wordSet.add(word)
+          words.append({
+              'word': word,
+              'definition': definition,
+              'gender': termInWord[1],
+              'tags': [source]
+          })
+          continue
+        termsInString = searchTextForGenderedTerm(definition)
+        if termsInString is not None:
+          gender = termsInString[1]
+          location = termsInString[2]
+          startIndex = location.start(0)
+          endIndex = location.end(0)
+          if isValidDefinition(definition, startIndex, endIndex):
             words.append({
-                'word': word,
-                'definition': definition,
-                'gender': gender,
-                'tags': [source]
+              'word': result,
+              'definition': definition,
+              'gender': gender,
+              'tags': [source]
             })
-            continue
-          termsInString = findPattern(definition, gender)
-          if termsInString is not None:
-            startIndex = termsInString[0]
-            endIndex = termsInString[1]
-            if isValidDefinition(definition, startIndex, endIndex):
-              words.append({
-                'word': result,
-                'definition': definition,
-                'gender': gender,
-                'tags': [source]
-              })
-              wordSet.add(result)
-            else:
-              discardSet.add(word)
-              discard.append({
-                'word': word,
-                'definition': definition,
-                'gender': gender,
-                'tags': [source]
-              })
+            wordSet.add(result)
+          else:
+            discardSet.add(word)
+            discard.append({
+              'word': word,
+              'definition': definition,
+              'gender': gender,
+              'tags': [source]
+            })
     allWords.extend(words)
-  bucket('female')
-  bucket('male')
   print ('gender specific done')
 
 def getUrbanDictionary():
