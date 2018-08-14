@@ -87,7 +87,7 @@ def getWordnik():
                 'gender': gender,
                 'tags': [source]
               })
-    # allWords.extend(words)
+    allWords.extend(words)
 
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')

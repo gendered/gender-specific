@@ -103,14 +103,15 @@ def createSets(words):
 							continue
 						definition = getWordDefinition(word)
 						if definition != ' ':
-							result = getGender(word)
+							result = searchTextForGenderedTerm(definition)
 							if result is not None:
 								isGenderedTerm = result[0]
-								if isGenderedTerm:
+								syn_gender - result[1]
+								if isGenderedTerm and syn_gender == gender:
 									all.append({
 										'word': word,
 										'definition': definition,
-										'gender': result[1]
+										'gender': syn_gender
 									})
 									wordsInSet.add(word)
 									continue
