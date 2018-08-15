@@ -55,7 +55,7 @@ def preprocess(sentence):
 def isValidDefinition(definitions, startIndex, endIndex):
 
     # remove word with any of these terms
-    def hasWordsToExclude(definition):
+    def hasWordsToExclude():
         path = os.getcwd() + '/utils/pattern.txt'
         f = open(path, 'r')
         terms = f.read().replace('\n', '')
@@ -82,7 +82,7 @@ def isValidDefinition(definitions, startIndex, endIndex):
             return True
         return False
 
-    def sentenceIsRightStructure(definition):
+    def sentenceIsRightStructure():
         # trim
         trimmedDefinition = definition[0:endIndex]
         # remove a and an
@@ -114,27 +114,14 @@ def isValidDefinition(definitions, startIndex, endIndex):
             else:
                 return True
 
-    def isTermPossessive(definition):
+    def isTermPossessive():
         if len(definition) != endIndex:
             last = definition[endIndex]
             if last == "'" or last == '-':
                 return True
         return False
     
-    def checkValidity(definition):        
-        if not hasWordsToExclude(definition) and not isTermPossessive(definition) and sentenceIsRightStructure(definition):
-            return True
-        else:
-            return False
-
-    if isinstance(definitions, str):
-        definitions = [definitions]
-    validDefinitions = []
-    for definition in definitions:
-        if checkValidity(definition):
-            validDefinitions.append(definition)
-    if len(validDefinitions) > 0:
-        return (True, validDefinitions)
+    if not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
+        return True
     else:
-        return (False, None)
-
+        return False

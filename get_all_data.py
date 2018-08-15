@@ -66,29 +66,36 @@ def addDefinition(entry, definition):
       continue
   entry['definition'].append(definition)
 
-def processWord(word, definition, source, words, gender=None):
+def processDefinitions(definitions):
+  validDefinitions = []
+  for definition in definitions:
+    termsInDef = searchTextForGenderedTerm(definition, gender)
+    if termsInDef is not None:
+      gender = termsInDef[1]
+      location = termsInDef[2]
+      startIndex = location.start(0)
+      endIndex = location.end(0)
+      if isValidDefinition(definition, startIndex, endIndex):
+        validDefinitions.append(definition)
+  return validDefinitions
+
+def processWord(word, definitions, source, words, gender=None):
   termInWord = searchTextForGenderedTerm(word)
   if termInWord is not None and termInWord[0]:
     wordSet.add(word)
     if gender is None:
       gender = termInWord[1]
     # add directly to allWords since we are not checking for multiple definitions
-    addEntry(word, [definition], gender, source, words)
+    addEntry(word, [definitions], gender, source, words)
     return
-  termsInDef = searchTextForGenderedTerm(definition, gender)
-  if termsInDef is not None:
-    gender = termsInDef[1]
-    location = termsInDef[2]
-    startIndex = location.start(0)
-    endIndex = location.end(0)
-    validDefinition = isValidDefinition(definition, startIndex, endIndex)
-    if validDefinition[0]:  
-      wordSet.add(word)
-      definition = validDefinition[1]
-      addEntry(word, definition, gender, source, words)
-    else:
-      discardSet.add(word)
-      addEntry(word, definition, gender, source, discard)
+
+  validDefinitions = processDefinitions(definitions)
+  if len(validDefinitions) > 0:
+    wordSet.add(word)
+    addEntry(word, validDefinitions, gender, source, words)
+  else:
+    discardSet.add(word)
+    addEntry(word, definition, gender, source, discard)
 
 # get words from wordnik
 def getWordnik():
@@ -203,11 +210,11 @@ if __name__ == "__main__":
     discardSet = set(entry['word'] for entry in discard)
 
   # stuff only to run when not called via 'import' here
-  addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-  addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-  getWordnik()
-  getWebster()
-  getDatamuse()
+  # addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+  # addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+  # getWordnik()
+  # getWebster()
+  # getDatamuse()
   getGSFull()
   print(len(allWords))
   writeToJson('words/all-2', allWords)
