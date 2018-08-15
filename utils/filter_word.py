@@ -52,7 +52,7 @@ def preprocess(sentence):
     translator = str.maketrans('', '', string.punctuation)
     return sentence.translate(translator)
 
-def isValidDefinition(definitions, startIndex, endIndex):
+def isValidDefinition(definition, startIndex, endIndex):
 
     # remove word with any of these terms
     def hasWordsToExclude():

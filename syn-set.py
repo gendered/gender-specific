@@ -4,7 +4,6 @@ from pprint import pprint
 from vocabulary.vocabulary import Vocabulary as vb
 from thesaurus import Word
 from nltk.corpus import wordnet
-import os
 import re
 import sys
 sys.path.insert(0, 'utils/')
@@ -14,6 +13,11 @@ from filter_word import isValidDefinition
 from filter_word import getGender
 from filter_word import findPattern
 import pandas as pd
+from pyhugeconnector import pyhugeconnector
+# load dotenv in the base root
+APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
+dotenv_path = os.path.join(APP_ROOT, '.env')
+load_dotenv(dotenv_path)
 
 
 with open('words/all.json') as f:
@@ -39,6 +43,11 @@ def getSynonyms(word):
 			syns.add(l.name())
 	w = Word(word)
 	syns.update(w.synonyms())
+	if not syns:
+		apiKey = os.getenv('BIG_HUGE')
+		result = pyhugeconnector.thesaurus_entry(word=word, api_key=apiKey, pos_tag='n', ngram=2, relationship_type='syn')
+		if isinstance(result, list):
+			syns.update(result)
 	return syns
 
 def isNoun(word):
@@ -106,7 +115,7 @@ def createSets(words):
 							result = searchTextForGenderedTerm(definition)
 							if result is not None:
 								isGenderedTerm = result[0]
-								syn_gender - result[1]
+								syn_gender = result[1]
 								if isGenderedTerm and syn_gender == gender:
 									all.append({
 										'word': word,

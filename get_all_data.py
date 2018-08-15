@@ -66,7 +66,7 @@ def addDefinition(entry, definition):
       continue
   entry['definition'].append(definition)
 
-def processDefinitions(definitions):
+def processDefinitions(definitions, gender=None):
   validDefinitions = []
   for definition in definitions:
     termsInDef = searchTextForGenderedTerm(definition, gender)
@@ -79,17 +79,17 @@ def processDefinitions(definitions):
         validDefinitions.append(definition)
   return validDefinitions
 
-def processWord(word, definitions, source, words, gender=None):
+def processWord(word, definition, source, words, gender=None):
   termInWord = searchTextForGenderedTerm(word)
   if termInWord is not None and termInWord[0]:
     wordSet.add(word)
     if gender is None:
       gender = termInWord[1]
     # add directly to allWords since we are not checking for multiple definitions
-    addEntry(word, [definitions], gender, source, words)
+    addEntry(word, [definition], gender, source, words)
     return
 
-  validDefinitions = processDefinitions(definitions)
+  validDefinitions = processDefinitions(definition, gender)
   if len(validDefinitions) > 0:
     wordSet.add(word)
     addEntry(word, validDefinitions, gender, source, words)
@@ -208,14 +208,18 @@ if __name__ == "__main__":
   with open('words/discard.json') as f:
     discard = json.load(f)
     discardSet = set(entry['word'] for entry in discard)
-
-  # stuff only to run when not called via 'import' here
-  # addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-  # addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-  # getWordnik()
-  # getWebster()
-  # getDatamuse()
-  getGSFull()
-  print(len(allWords))
+  try:
+    # stuff only to run when not called via 'import' here
+    addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+    addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+    getWordnik()
+    getWebster()
+    getDatamuse()
+    getGSFull()
+  except:
+      print(len(allWords))
+      writeToJson('words/all-2', allWords)
+      writeToJson('words/discard-2', discard)
+    
   writeToJson('words/all-2', allWords)
   writeToJson('words/discard-2', discard)

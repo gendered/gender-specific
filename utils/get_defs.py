@@ -59,15 +59,19 @@ def getWordDefinition(word):
       # wiktionary
       parser = WiktionaryParser()
       result = parser.fetch(word)
-      if (result):
-        definition = result[0]['definitions'][0]
-        if definition['partOfSpeech'] == 'noun':
-          defs = definition['text'].lower().split('\n')
-          if len(defs) > 1:
-            return defs[0:2]
-          return defs
+      if len(result) > 0:
+        definition = result[0]['definitions']
+        if len(definition) > 0:
+          definition = definition[0]
+          if definition['partOfSpeech'] == 'noun':
+            defs = definition['text'].lower().split('\n')
+            if len(defs) > 1:
+              return defs[0:2]
+            return defs
     return ' '
 
+  if not isinstance(word, str):
+    return
   searches = []
   # for example, look for beauty_queen, beauty-queen, beauty queen.
   if '_' in word:
