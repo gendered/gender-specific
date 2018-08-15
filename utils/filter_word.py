@@ -52,9 +52,10 @@ def preprocess(sentence):
     translator = str.maketrans('', '', string.punctuation)
     return sentence.translate(translator)
 
-def isValidDefinition(definition, startIndex, endIndex):
+def isValidDefinition(definitions, startIndex, endIndex):
+
     # remove word with any of these terms
-    def hasWordsToExclude():
+    def hasWordsToExclude(definition):
         path = os.getcwd() + '/utils/pattern.txt'
         f = open(path, 'r')
         terms = f.read().replace('\n', '')
@@ -81,7 +82,7 @@ def isValidDefinition(definition, startIndex, endIndex):
             return True
         return False
 
-    def sentenceIsRightStructure():
+    def sentenceIsRightStructure(definition):
         # trim
         trimmedDefinition = definition[0:endIndex]
         # remove a and an
@@ -113,14 +114,26 @@ def isValidDefinition(definition, startIndex, endIndex):
             else:
                 return True
 
-    def isTermPossessive():
+    def isTermPossessive(definition):
         if len(definition) != endIndex:
             last = definition[endIndex]
             if last == "'" or last == '-':
                 return True
         return False
-            
-    if not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
-        return True
+    
+    def checkValidity(definition):        
+        if not hasWordsToExclude(definition) and not isTermPossessive(definition) and sentenceIsRightStructure(definition):
+            return True
+        else:
+            return False
+
+   if isinstance(definition, list) and len(defs) > 0:
+    validDefinitions = []
+    for definition in definitions:
+        if checkValidity(definition):
+            validDefinitions.append(definition)
+    if len(validDefinitions) > 0:
+        return (True, validDefinitions)
     else:
-        return False
+        return (False, None)
+
