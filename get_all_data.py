@@ -47,49 +47,66 @@ def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
       json.dump(list(set), outfile)
 
+def addEntry(word, definition, gender, source, array):
+  array.append({
+    'word': word,
+    'definition': [definition],
+    'gender': gender,
+    'tags': [source]
+  })
+
+def findWordInArray(word, arr):
+  for entry in arr:
+    if entry['word'] == word:
+      return entry
+  return None
+
+def addDefinition(entry, definition):
+  defs = entry['definition']
+  for d in defs:
+    if d == definition:
+      continue
+  entry['definition'].append(definition)
+
 # get words from wordnik
 def getWordnik():
   wordsApi = WordsApi.WordsApi(client)
   source = 'wordnik'
+
   def callApi(terms, gender):
-    print('in wordnik')
+    # to store words from this source and check for multiple definitions of the same word
+    words = []
     for term in terms:
       reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
       for result in reverseDictionary:
         word = result.word.lower()
         definition = (result.text).lower()
-        if (word not in wordSet and word not in discardSet and isValidWord(word)):
+        # if word is already in the set, add the new definition of the word
+        if word in wordSet:
+          entry = findWordInArray(word, words)
+          if entry is not None:
+            addDefinition(entry, definition)
+        if (word not in discardSet and isValidWord(word)):
+          # search word for gendered term (e.g womanhood, mother-in-law)
           termInWord = searchTextForGenderedTerm(word, gender)
           if termInWord is not None and termInWord[0]:
             wordSet.add(word)
-            allWords.append({
-              'word': word,
-              'definition': definition,
-              'gender': gender,
-              'tags': [source]
-            })
+            addEntry(word, definition, gender, source, words)
             continue
-          termsInString = searchTextForGenderedTerm(definition, gender)
-          if termsInString is not None:
-            location = termsInString[2]
+          # if none in word, search definition for gendered team, i.e does definition contain woman, man etc
+          termsInDef = searchTextForGenderedTerm(definition, gender)
+          if termsInDef is not None:
+            location = termsInDef[2]
             startIndex = location.start(0)
             endIndex = location.end(0)
             if isValidDefinition(definition, startIndex, endIndex):
               wordSet.add(word)
-              allWords.append({
-                'word': word,
-                'definition': definition,
-                'gender': gender,
-                'tags': [source]
-              })
+              addEntry(word, definition, gender, source, words)
             else:
               discardSet.add(word)
-              discard.append({
-                'word': word,
-                'definition': definition,
-                'gender': gender,
-                'tags': [source]
-              })
+              addEntry(word, definition, gender, source, discard)
+    allWords.extend(words)
+
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')
   print ('wordnik done')
@@ -99,49 +116,41 @@ def getDatamuse():
   api = datamuse.Datamuse()
   source = 'datamuse'
   def callApi(terms, gender):
+    # to store words from this source and check for multiple definitions of the same word
+    words = []
     for term in terms:
       results = api.words(ml=term, max=1000, md='dp')
       for result in results:
         word = result['word'].lower()
-        if (word not in wordSet and word not in discardSet and isValidWord(word)):
-          # check if it's a noun
-          if ('tags' in result and 'n' in result['tags']):
-            if ('defs' in result):
-              definition = result['defs'][0]
-            else:
-                definition = getWordDefinition(word)
-            if (definition != ' '):
+        # check if it's a noun
+        if ('tags' in result and 'n' in result['tags']):
+          if ('defs' in result):
+            definition = result['defs'][0]
+          else:
+              definition = getWordDefinition(word)
+          if (definition != ' '):
+            if word in wordSet:
+              entry = findWordInArray(word, words)
+              if entry is not None:
+                addDefinition(entry, definition)
+            if (word not in discardSet and isValidWord(word)):
               termInWord = searchTextForGenderedTerm(word, gender)
               if termInWord is not None and termInWord[0]:
                 wordSet.add(word)
-                allWords.append({
-                  'word': word,
-                  'definition': definition,
-                  'gender': gender,
-                  'tags': [source]
-                })
+                addEntry(word, definition, gender, source, words)
                 continue
-              termsInString = searchTextForGenderedTerm(definition, gender)
-              if termsInString is not None:
-                location = termsInString[2]
+              termsInDef = searchTextForGenderedTerm(definition, gender)
+              if termsInDef is not None:
+                location = termsInDef[2]
                 startIndex = location.start(0)
                 endIndex = location.end(0)
                 if isValidDefinition(definition, startIndex, endIndex):
-                    wordSet.add(word)
-                    allWords.append({
-                      'word': word,
-                      'definition': definition,
-                      'gender': gender,
-                      'tags': [source]
-                    })
+                  wordSet.add(word)
+                  addEntry(word, definition, gender, source, words)
                 else:
                   discardSet.add(word)
-                  discard.append({
-                    'word': word,
-                    'definition': definition,
-                    'gender': gender,
-                    'tags': [source]
-                  })
+                  addEntry(word, definition, gender, source, discard)
+    allWords.extend(words)
 
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')
@@ -159,40 +168,25 @@ def getWebster():
       termInWord = searchTextForGenderedTerm(word)
       if termInWord is not None and termInWord[0]:
         wordSet.add(word)
-        allWords.append({
-            'word': word,
-            'definition': definition,
-            'gender': termInWord[1],
-            'tags': [source]
-        })
+        gender = termInWord[1]
+        # add directly to allWords since we are not checking for multiple definitions
+        addEntry(word, definition, gender, source, allWords)
         continue
-      termsInString = searchTextForGenderedTerm(definition)
-      if termsInString is not None:
-        gender = termsInString[1]
-        location = termsInString[2]
+      termsInDef = searchTextForGenderedTerm(definition, gender)
+      if termsInDef is not None:
+        gender = termsInDef[1]
+        location = termsInDef[2]
         startIndex = location.start(0)
         endIndex = location.end(0)
         if isValidDefinition(definition, startIndex, endIndex):
-          # get part of speech
           for ss in wn.synsets(result):
             pos = ss.pos()
             if ('n' in pos):
-              wordSet.add(result)
-              allWords.append({
-                'word': result,
-                'definition': definition,
-                'gender': gender,
-                'tags': [source]
-              })
-              continue
+              wordSet.add(word)
+              addEntry(word, definition, gender, source, allWords)
         else:
           discardSet.add(word)
-          discard.append({
-            'word': word,
-            'definition': definition,
-            'gender': gender,
-            'tags': [source]
-          })
+          addEntry(word, definition, gender, source, discard)
   print('webster done')
 
 def getGSFull():
@@ -205,62 +199,30 @@ def getGSFull():
   words = []
   for result in results:
     word = result.lower()
-    if (word not in wordSet and word not in discardSet and isValidWord(word)):
+     if (word not in wordSet and word not in discardSet and isValidWord(word)):
       definition = getWordDefinition(result)
       if (definition is not None and definition != ' '):
         definition = definition.lower()
         termInWord = searchTextForGenderedTerm(word)
         if termInWord is not None and termInWord[0]:
           wordSet.add(word)
-          allWords.append({
-              'word': word,
-              'definition': definition,
-              'gender': termInWord[1],
-              'tags': [source]
-          })
+          gender = termInWord[1]
+          # add directly to allWords since we are not checking for multiple definitions
+          addEntry(word, definition, gender, source, allWords)
           continue
-        termsInString = searchTextForGenderedTerm(definition)
-        if termsInString is not None:
-          gender = termsInString[1]
-          location = termsInString[2]
+        termsInDef = searchTextForGenderedTerm(definition, gender)
+        if termsInDef is not None:
+          gender = termsInDef[1]
+          location = termsInDef[2]
           startIndex = location.start(0)
           endIndex = location.end(0)
           if isValidDefinition(definition, startIndex, endIndex):
-            allWords.append({
-              'word': result,
-              'definition': definition,
-              'gender': gender,
-              'tags': [source]
-            })
-            wordSet.add(result)
+            wordSet.add(word)
+            addEntry(word, definition, gender, source, allWords)
           else:
             discardSet.add(word)
-            discard.append({
-              'word': word,
-              'definition': definition,
-              'gender': gender,
-              'tags': [source]
-            })
+            addEntry(word, definition, gender, source, discard)
   print ('gender specific done')
-
-def getUrbanDictionary():
-  source = 'urban-dic'
-  # only these columns are needed
-  fields = ['word', 'definition', 'thumbs_up']
-  # open csv files
-  ub_1 = pd.read_csv("data/urban/urban-dic-1.csv", encoding="ISO-8859-1", skipinitialspace=True, usecols=fields)
-  ub_2 = pd.read_csv("data/urban/urban-dic-2.csv", encoding="ISO-8859-1", skipinitialspace=True, usecols=fields)
-  ub_3 = pd.read_csv("data/urban/urban-dic-3.csv", encoding="ISO-8859-1", skipinitialspace=True, usecols=fields)
-  ub_4 = pd.read_csv("data/urban/urban-dic-4.csv", encoding="ISO-8859-1", skipinitialspace=True, usecols=fields)
-
-  frames = [ub_1, ub_2, ub_3, ub_4]
-  # add the two csvs together and remove nan values
-  ub = (pd.concat(frames)).dropna()
-
-  # only include entries with more than 1000 upvotes
-  ub = ub[ub['thumbs_up'] >= 1000]
-  # remove duplicates
-  ub = ub[~ub[['word']].apply(lambda x: x.str.lower().str.replace(" ","")).duplicated()]
 
 def addTerms(terms, gender):
   for word in terms:
@@ -286,13 +248,13 @@ if __name__ == "__main__":
   #   discardSet = set(entry['word'] for entry in discard)
 
   # stuff only to run when not called via 'import' here
-  addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-  addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+  # addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+  # addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
   getWordnik()
-  getWebster()
-  getDatamuse()
-  getGSFull()
+  # getWebster()
+  # getDatamuse()
+  # getGSFull()
   # getUrbanDictionary()
-  print(len(allWords))
-  writeToJson('words/all-2', allWords)
-  writeToJson('words/discard', discardSet)
+  # print(len(allWords))
+  # writeToJson('words/all-2', allWords)
+  # writeToJson('words/discard-2', discard)

@@ -12,7 +12,7 @@ import os
 
 def searchTextForGenderedTerm(text, gender=None):
     fs = r"""\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w-]*?mother\b|\b[\w]*?daughter\b|\bwife\b"""
-    ms = r"""\b[\w]*?man\b|\b[\w]*?boy\b|\b[\w]*?men\b|\b[\w]*?son\b|\b[\w-]*?father\b|\b[\w]*?husband\b|\bmale\b|\bboys\b"""
+    ms = r"""\bman\b|\b[\w]*?boy\b|\bmen\b|\b[\w]*?son\b|\b[\w-]*?father\b|\b[\w]*?husband\b|\bmale\b|\bboys\b"""
     f_pattern = re.compile(fs)
     m_pattern = re.compile(ms)
     femalePosition = f_pattern.search(text)
@@ -61,7 +61,6 @@ def isValidDefinition(definition, startIndex, endIndex):
         rgex = re.compile(terms)
         termInDef = rgex.search(definition)
         if termInDef is not None:
-            print('has terms to exclude', definition[termInDef.start(0): termInDef.end(0)])
             return True
         return False
 
@@ -103,15 +102,12 @@ def isValidDefinition(definition, startIndex, endIndex):
                 termOne = tags[length-2][0]
                 # gendered term should not be the object of a preposition
                 if posOne == 'IN':
-                    print('not right structure')
                     return False
                 if termOne == 'being':
-                    print('not right structure')
                     return False
                 if length >= 2:
                     posTwo = tags[length-3][1]
                     if posTwo == 'IN':
-                        print('not right structure')
                         return False
                 return True
             else:
@@ -121,9 +117,8 @@ def isValidDefinition(definition, startIndex, endIndex):
         if len(definition) != endIndex:
             last = definition[endIndex]
             if last == "'" or last == '-':
-                return False
-                print('possessive')
-        return True
+                return True
+        return False
             
     if not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
         return True
