@@ -1,3 +1,4 @@
 models/
 data/
 .env
+utils/__pycache__

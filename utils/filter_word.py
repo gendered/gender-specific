@@ -127,7 +127,8 @@ def isValidDefinition(definitions, startIndex, endIndex):
         else:
             return False
 
-   if isinstance(definition, list) and len(defs) > 0:
+    if isinstance(definitions, str):
+        definitions = [definitions]
     validDefinitions = []
     for definition in definitions:
         if checkValidity(definition):

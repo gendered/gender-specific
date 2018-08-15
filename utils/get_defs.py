@@ -3,7 +3,7 @@ from wordnik import *
 from PyDictionary import PyDictionary
 import requests
 from wiktionaryparser import WiktionaryParser
-from vocabulary.vocabulary import Vocabulary as vb
+from vocabulary.vocabulary import Vocabulary as vocabulary
 import os
 import json
 import re
@@ -27,43 +27,46 @@ def getWordDefinition(word):
     if isinstance(definition, dict) and 'Noun' in definition:
       defs = definition['Noun']
       if isinstance(defs, list) and len(defs) > 0:
-        return defs[0]
+        return defs
 
     # wordnik dictionary
     wordApi = WordApi.WordApi(client)
     try:
       definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
       if definition is not None:
-        return definition[0].text
+        return [(definition[0].text).lower()]
     except:
-      meaningsList = vb.meaning(word)
+      meaningsList = vocabulary.meaning(word)
       if meaningsList != False:
         defs = json.loads(meaningsList)
         if (len(defs) > 0):
-          definition = defs[0]['text']
-          # some of the definitions have html tags
-          return re.sub('<[^<]+?>', '', definition)
-
+          definitions = []
+          for definition in defs:
+            d = re.sub('<[^<]+?>', '', definition.text)
+            definitions.append(d.lower())
+          return definitions
     try:
+      # owlbot api
+      url = 'https://owlbot.info/api/v2/dictionary/' + word
+      r = requests.get(url)
+      result = (r.json())
+      definitions = []
+      for item in result:
+        if (item['type'] == 'noun' and item['definition']):
+          definitions.append(item['definition'].lower())
+      return definitions
+    except:
       # wiktionary
       parser = WiktionaryParser()
       result = parser.fetch(word)
       if (result):
-        definitions = result[0].definitions[0]
-        if definition.partOfSpeech == 'noun':
-          return definition.text
-    except:
-      try:
-        # owlbot api
-        url = 'https://owlbot.info/api/v2/dictionary/' + word
-        r = requests.get(url)
-        result = (r.json())[0]
-        if (result.type == 'noun' and result.definition):
-          return result.definition
-      except KeyboardInterrupt:
-        raise
-      except:
-        return ' '
+        definition = result[0]['definitions'][0]
+        if definition['partOfSpeech'] == 'noun':
+          defs = definition['text'].lower().split('\n')
+          if len(defs) > 1:
+            return defs[0:2]
+          return defs
+    return ' '
 
   searches = []
   # for example, look for beauty_queen, beauty-queen, beauty queen.

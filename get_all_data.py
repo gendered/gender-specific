@@ -11,10 +11,8 @@ from nltk.stem import *
 import collections
 from PyDictionary import PyDictionary
 import pandas as pd
-import urbandictionary as ud
 import requests
 from wiktionaryparser import WiktionaryParser
-from vocabulary.vocabulary import Vocabulary as vb
 import io
 import re
 import string
@@ -39,9 +37,9 @@ femaleTermsArr = ['woman', 'female', 'girl', 'lady', 'women', 'mother', 'daughte
 maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
 allWords = []
-discardSet = set()
+# discardSet = set()
 wordSet = set()
-discard = []
+# discard = []
 # writes to a json file
 def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
@@ -75,7 +73,7 @@ def processWord(word, definition, source, words, gender=None):
     if gender is None:
       gender = termInWord[1]
     # add directly to allWords since we are not checking for multiple definitions
-    addEntry(word, definition, gender, source, words)
+    addEntry(word, [definition], gender, source, words)
     return
   termsInDef = searchTextForGenderedTerm(definition, gender)
   if termsInDef is not None:
@@ -83,10 +81,10 @@ def processWord(word, definition, source, words, gender=None):
     location = termsInDef[2]
     startIndex = location.start(0)
     endIndex = location.end(0)
-    isValidDefinition = isValidDefinition(definition, startIndex, endIndex)
-    if isValidDefinition[0]:  
+    validDefinition = isValidDefinition(definition, startIndex, endIndex)
+    if validDefinition[0]:  
       wordSet.add(word)
-      definition = isValidDefinition[1]
+      definition = validDefinition[1]
       addEntry(word, definition, gender, source, words)
     else:
       discardSet.add(word)
@@ -110,6 +108,7 @@ def getWordnik():
           entry = findWordInArray(word, words)
           if entry is not None:
             addDefinition(entry, definition)
+          continue
         if (word not in discardSet and isValidWord(word)):
           processWord(word, definition, source, words, gender)
 
@@ -133,7 +132,7 @@ def getDatamuse():
         # check if it's a noun
         if ('tags' in result and 'n' in result['tags']):
           if ('defs' in result):
-            definition = result['defs'][0]
+            definition = result['defs']
           else:
               definition = getWordDefinition(word)
           if (definition != ' '):
@@ -141,6 +140,7 @@ def getDatamuse():
               entry = findWordInArray(word, words)
               if entry is not None:
                 addDefinition(entry, definition)
+              continue
             if (word not in discardSet and isValidWord(word)):
               processWord(word, definition, source, words, gender)
     allWords.extend(words)
@@ -155,10 +155,13 @@ def getWebster():
   source = 'webster'
   for result in results:
     # to-do: strip definition if it's too long
-    definition = (results[result]).lower()
+    definition = [(results[result]).lower()]
     word = result.lower()
     if (word not in wordSet and word not in discardSet and isValidWord(word)):
-      processWord(word, definition, source, allWords)
+      for ss in wn.synsets(word):
+        pos = ss.pos()
+        if ('n' in pos):
+          processWord(word, definition, source, allWords)
   print('webster done')
 
 def getGSFull():
@@ -172,10 +175,12 @@ def getGSFull():
   for result in results:
     word = result.lower()
     if (word not in wordSet and word not in discardSet and isValidWord(word)):
-      definition = getWordDefinition(result)
-      if (definition is not None and definition != ' '):
-        definition = definition.lower()
-        processWord(word, definition, source, allWords)
+      for ss in wn.synsets(word):
+        pos = ss.pos()
+        if ('n' in pos):
+          definition = getWordDefinition(word)
+          if (definition is not None and definition != ' '):
+            processWord(word, definition, source, allWords)
 
   print ('gender specific done')
 
@@ -184,12 +189,7 @@ def addTerms(terms, gender):
     definition = getWordDefinition(word)
     if word not in wordSet and word not in discardSet:
       wordSet.add(word)
-      allWords.append({
-        'word': word,
-        'definition': definition,
-        'gender': gender,
-        'source': 'wordnik'
-      })
+      addEntry(word, definition, gender, 'wordnik', allWords)
 
 
 if __name__ == "__main__":
@@ -198,18 +198,17 @@ if __name__ == "__main__":
   #   print(len(allWords))
   #   wordSet = set(entry['word'] for entry in allWords)
 
-  # with open('words/discard.json') as f:
-  #   discard = json.load(f)
-  #   discardSet = set(entry['word'] for entry in discard)
+  with open('words/discard.json') as f:
+    discard = json.load(f)
+    discardSet = set(entry['word'] for entry in discard)
 
   # stuff only to run when not called via 'import' here
-  # addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-  # addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-  # getWordnik()
-  # getWebster()
-  # getDatamuse()
+  addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+  addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+  getWordnik()
+  getWebster()
+  getDatamuse()
   getGSFull()
-  # getUrbanDictionary()
-  # print(len(allWords))
-  # writeToJson('words/all-2', allWords)
-  # writeToJson('words/discard-2', discard)
+  print(len(allWords))
+  writeToJson('words/all-2', allWords)
+  writeToJson('words/discard-2', discard)
