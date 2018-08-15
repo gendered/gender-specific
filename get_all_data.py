@@ -231,7 +231,7 @@ def addTerms(terms, gender):
       wordSet.add(word)
       allWords.append({
         'word': word,
-        'definition': definition,
+        'definition': [definition],
         'gender': gender,
         'source': 'wordnik'
       })
