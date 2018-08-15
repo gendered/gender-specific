@@ -199,7 +199,7 @@ def getGSFull():
   words = []
   for result in results:
     word = result.lower()
-     if (word not in wordSet and word not in discardSet and isValidWord(word)):
+    if (word not in wordSet and word not in discardSet and isValidWord(word)):
       definition = getWordDefinition(result)
       if (definition is not None and definition != ' '):
         definition = definition.lower()
@@ -238,23 +238,4 @@ def addTerms(terms, gender):
 
 
 if __name__ == "__main__":
-  # with open('words/all.json') as f:
-  #   allWords = json.load(f)
-  #   print(len(allWords))
-  #   wordSet = set(entry['word'] for entry in allWords)
-
-  # with open('words/discard.json') as f:
-  #   discard = json.load(f)
-  #   discardSet = set(entry['word'] for entry in discard)
-
-  # stuff only to run when not called via 'import' here
-  # addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-  # addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-  getWordnik()
-  # getWebster()
-  # getDatamuse()
-  # getGSFull()
-  # getUrbanDictionary()
-  # print(len(allWords))
-  # writeToJson('words/all-2', allWords)
-  # writeToJson('words/discard-2', discard)
+  getWordDefinition('woman')

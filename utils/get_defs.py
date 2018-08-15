@@ -27,6 +27,8 @@ def getWordDefinition(word):
     if isinstance(definition, dict) and 'Noun' in definition:
       defs = definition['Noun']
       if isinstance(defs, list) and len(defs) > 0:
+        print('py')
+        print(defs)
         return defs[0]
 
     # wordnik dictionary
@@ -40,6 +42,8 @@ def getWordDefinition(word):
       if meaningsList != False:
         defs = json.loads(meaningsList)
         if (len(defs) > 0):
+          print('wordnik')
+          print(defs)
           definition = defs[0]['text']
           # some of the definitions have html tags
           return re.sub('<[^<]+?>', '', definition)
