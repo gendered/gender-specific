@@ -21,7 +21,8 @@ sys.path.insert(0, 'utils/')
 from get_defs import getWordDefinition
 from filter_word import isValidWord
 from filter_word import isValidDefinition
-from filter_word import searchTextForGenderedTerm
+from filter_word import searchWordForGenderedTerm
+from filter_word import searchDefinitionForGenderedTerm
 
 # load dotenv in the base root
 APP_ROOT = os.path.join(os.path.dirname(__file__), '.')   # refers to application_top
@@ -36,10 +37,14 @@ client = swagger.ApiClient(apiKey, apiUrl)
 femaleTermsArr = ['woman', 'female', 'girl', 'lady', 'women', 'mother', 'daughter', 'wife']
 maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
 wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
+
+with open('words/discard.json') as f:
+  discard = json.load(f)
+  discardSet = set(entry['word'] for entry in discard)
+
 allWords = []
-# discardSet = set()
 wordSet = set()
-# discard = []
+
 # writes to a json file
 def writeToJson(path, set):
   with open(path + '.json', 'w') as outfile:
@@ -67,35 +72,39 @@ def addDefinition(entry, definition):
   entry['definition'].append(definition)
 
 def processDefinitions(definitions, gender=None):
+  if isinstance(definitions, str):
+    definitions = [definitions]
   validDefinitions = []
-  for definition in definitions:
-    termsInDef = searchTextForGenderedTerm(definition, gender)
-    if termsInDef is not None:
-      gender = termsInDef[1]
-      location = termsInDef[2]
-      startIndex = location.start(0)
-      endIndex = location.end(0)
-      if isValidDefinition(definition, startIndex, endIndex):
-        validDefinitions.append(definition)
-  return validDefinitions
+  termsFound = False
+  if len(definitions) > 0:
+    for definition in definitions:
+      termsInDef = searchDefinitionForGenderedTerm(definition, gender)
+      if termsInDef is not None:
+        gender = termsInDef[1]
+        location = termsInDef[2]
+        startIndex = location.start(0)
+        endIndex = location.end(0)
+        termsFound = True
+        if isValidDefinition(definition, startIndex, endIndex):
+          validDefinitions.append(definition)
+  return (validDefinitions, termsFound)
 
 def processWord(word, definition, source, words, gender=None):
-  termInWord = searchTextForGenderedTerm(word)
+  termInWord = searchWordForGenderedTerm(word)
   if termInWord is not None and termInWord[0]:
     wordSet.add(word)
     if gender is None:
       gender = termInWord[1]
     # add directly to allWords since we are not checking for multiple definitions
-    addEntry(word, [definition], gender, source, words)
+    addEntry(word, definition, gender, source, words)
     return
-
   validDefinitions = processDefinitions(definition, gender)
-  if len(validDefinitions) > 0:
+  if len(validDefinitions[0]) > 0:
     wordSet.add(word)
     addEntry(word, validDefinitions, gender, source, words)
-  else:
+  elif validDefinitions[1]:
     discardSet.add(word)
-    addEntry(word, definition, gender, source, discard)
+    addEntry(word, [definition], gender, source, discard)
 
 # get words from wordnik
 def getWordnik():
@@ -116,7 +125,7 @@ def getWordnik():
           if entry is not None:
             addDefinition(entry, definition)
           continue
-        if (word not in discardSet and isValidWord(word)):
+        elif word not in wordSet and word not in discardSet and isValidWord(word):
           processWord(word, definition, source, words, gender)
 
     allWords.extend(words)
@@ -148,7 +157,7 @@ def getDatamuse():
               if entry is not None:
                 addDefinition(entry, definition)
               continue
-            if (word not in discardSet and isValidWord(word)):
+            elif (word not in wordSet and word not in discardSet and isValidWord(word)):
               processWord(word, definition, source, words, gender)
     allWords.extend(words)
 
@@ -165,10 +174,8 @@ def getWebster():
     definition = [(results[result]).lower()]
     word = result.lower()
     if (word not in wordSet and word not in discardSet and isValidWord(word)):
-      for ss in wn.synsets(word):
-        pos = ss.pos()
-        if ('n' in pos):
-          processWord(word, definition, source, allWords)
+      processWord(word, definition, source, allWords)
+  print(allWords)
   print('webster done')
 
 def getGSFull():
@@ -182,13 +189,9 @@ def getGSFull():
   for result in results:
     word = result.lower()
     if (word not in wordSet and word not in discardSet and isValidWord(word)):
-      for ss in wn.synsets(word):
-        pos = ss.pos()
-        if ('n' in pos):
-          definition = getWordDefinition(word)
-          if (definition is not None and definition != ' '):
-            processWord(word, definition, source, allWords)
-
+      definition = getWordDefinition(word)
+      if (definition is not None and definition != ' '):
+        processWord(word, definition, source, allWords)
   print ('gender specific done')
 
 def addTerms(terms, gender):
@@ -198,17 +201,6 @@ def addTerms(terms, gender):
       wordSet.add(word)
       addEntry(word, definition, gender, 'wordnik', allWords)
 
-
-if __name__ == "__main__":
-  # with open('words/all.json') as f:
-  #   allWords = json.load(f)
-  #   print(len(allWords))
-  #   wordSet = set(entry['word'] for entry in allWords)
-
-  with open('words/discard.json') as f:
-    discard = json.load(f)
-    discardSet = set(entry['word'] for entry in discard)
-  try:
     # stuff only to run when not called via 'import' here
     addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
     addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
@@ -216,10 +208,7 @@ if __name__ == "__main__":
     getWebster()
     getDatamuse()
     getGSFull()
-  except:
-      print(len(allWords))
-      writeToJson('words/all-2', allWords)
-      writeToJson('words/discard-2', discard)
-    
+
+  print(len(allWords))
   writeToJson('words/all-2', allWords)
   writeToJson('words/discard-2', discard)

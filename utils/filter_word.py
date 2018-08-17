@@ -10,9 +10,17 @@ import string
 import exclude_words
 import os 
 
-def searchTextForGenderedTerm(text, gender=None):
-    fs = r"""\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w-]*?mother\b|\b[\w]*?daughter\b|\bwife\b"""
-    ms = r"""\bman\b|\b[\w]*?boy\b|\bmen\b|\b[\w]*?son\b|\b[\w-]*?father\b|\b[\w]*?husband\b|\bmale\b|\bboys\b"""
+def searchWordForGenderedTerm(text, gender=None):
+    fs = r"""\b[\w]*?woman\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w-]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\bsister\b"""
+    ms = r"""\bman\b|\b[\w]*?boy\b|\bmen\b|\bson\b|\b[\w-]*?father\b|\b[\w]*?husband\b|\bboys\b|\bbrother\b"""
+    return searchTextForGenderedTerm(fs, ms, text, gender)
+
+def searchDefinitionForGenderedTerm(text, gender=None):
+    fs = r"""\b[\w]*?woman\b|\bfemale\b|\b[\w]*?girl\b|\bgirls\b|\b[\w]*?women\b|\blady\b|\b[\w-]*?mother\b|\b[\w]*?daughter\b|\bwife\b|\bsister\b"""
+    ms = r"""\bman\b|\b[\w]*?boy\b|\bmen\b|\bson\b|\b[\w-]*?father\b|\b[\w]*?husband\b|\bmale\b|\bboys\b|\bbrother\b"""
+    return searchTextForGenderedTerm(fs, ms, text, gender)
+
+def searchTextForGenderedTerm(fs, ms, text, gender=None):
     f_pattern = re.compile(fs)
     m_pattern = re.compile(ms)
     femalePosition = f_pattern.search(text)
@@ -43,7 +51,7 @@ def getEarlierIndex(femalePosition, malePosition):
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or not word[0].isalpha():
+    if hasNumbers(word) or not word[0].isalpha() and len(word) > 2:
         return False
     return True
 
@@ -74,8 +82,8 @@ def isValidDefinition(definition, startIndex, endIndex):
               new_tags.append(item)
       return new_tags
 
-    def anyExceptions(definition, tags):
-        exceptions = 'name of|applied to|given to|term for'
+    def anyExceptions(definition):
+        exceptions = 'name [of|for]|applied to|given to|term[s]? for|word for|address for|title'
         rgex = re.compile(exceptions)
         termInDef = rgex.search(definition)
         if termInDef is not None:
@@ -98,7 +106,7 @@ def isValidDefinition(definition, startIndex, endIndex):
         if length <= 1:
             return True
         else:
-            if not anyExceptions(definition, tags):
+            if not anyExceptions(definition):
                 posOne = tags[length-2][1]
                 termOne = tags[length-2][0]
                 # gendered term should not be the object of a preposition
@@ -121,7 +129,7 @@ def isValidDefinition(definition, startIndex, endIndex):
                 return True
         return False
     
-    if not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
+    if not startIndex > 30 and not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
         return True
     else:
         return False

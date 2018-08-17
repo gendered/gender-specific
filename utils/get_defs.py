@@ -32,9 +32,9 @@ def getWordDefinition(word):
     # wordnik dictionary
     wordApi = WordApi.WordApi(client)
     try:
-      definition = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=1))
-      if definition is not None:
-        return [(definition[0].text).lower()]
+      definitions = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=3))
+      if definitions is not None:
+        return [(definition.text).lower() for definition in definitions]
     except:
       meaningsList = vocabulary.meaning(word)
       if meaningsList != False:
