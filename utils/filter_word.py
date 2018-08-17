@@ -129,7 +129,7 @@ def isValidDefinition(definition, startIndex, endIndex):
                 return True
         return False
     
-    if not startIndex > 30 and not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
+    if not startIndex > 100 and not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
         return True
     else:
         return False

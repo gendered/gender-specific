@@ -36,7 +36,6 @@ client = swagger.ApiClient(apiKey, apiUrl)
 
 femaleTermsArr = ['woman', 'female', 'girl', 'lady', 'women', 'mother', 'daughter', 'wife']
 maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
-wordSet = set(['woman', 'female', 'girl', 'lady', 'man', 'male', 'boy', 'mother', 'daughter', 'son', 'father', 'husband', 'wife'])
 
 with open('words/discard.json') as f:
   discard = json.load(f)
@@ -72,8 +71,6 @@ def addDefinition(entry, definition):
   entry['definition'].append(definition)
 
 def processDefinitions(definitions, gender=None):
-  if isinstance(definitions, str):
-    definitions = [definitions]
   validDefinitions = []
   termsFound = False
   if len(definitions) > 0:
@@ -90,6 +87,8 @@ def processDefinitions(definitions, gender=None):
   return (validDefinitions, termsFound)
 
 def processWord(word, definition, source, words, gender=None):
+  if isinstance(definition, str):
+    definition = [definition]
   termInWord = searchWordForGenderedTerm(word)
   if termInWord is not None and termInWord[0]:
     wordSet.add(word)
@@ -127,9 +126,7 @@ def getWordnik():
           continue
         elif word not in wordSet and word not in discardSet and isValidWord(word):
           processWord(word, definition, source, words, gender)
-
     allWords.extend(words)
-
   callApi(femaleTermsArr, 'female')
   callApi(maleTermsArr, 'male')
   print ('wordnik done')
@@ -175,7 +172,6 @@ def getWebster():
     word = result.lower()
     if (word not in wordSet and word not in discardSet and isValidWord(word)):
       processWord(word, definition, source, allWords)
-  print(allWords)
   print('webster done')
 
 def getGSFull():
@@ -201,14 +197,14 @@ def addTerms(terms, gender):
       wordSet.add(word)
       addEntry(word, definition, gender, 'wordnik', allWords)
 
-    # stuff only to run when not called via 'import' here
-    addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
-    addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-    getWordnik()
-    getWebster()
-    getDatamuse()
-    getGSFull()
+# stuff only to run when not called via 'import' here
+addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
+getWordnik()
+getWebster()
+getDatamuse()
+getGSFull()
 
-  print(len(allWords))
-  writeToJson('words/all-2', allWords)
-  writeToJson('words/discard-2', discard)
+print(len(allWords))
+writeToJson('words/all-2', allWords)
+writeToJson('words/discard-2', discard)
