@@ -49,14 +49,17 @@ def getWordDefinition(word):
     url = 'https://owlbot.info/api/v2/dictionary/' + word
     r = requests.get(url)
     if r is not None:
-      result = (r.json())
-      if len(result) > 0:
-        definitions = []
-        for item in result:
-          if (item['type'] == 'noun' and item['definition']):
-            definitions.append(item['definition'].lower())
-        if len(definitions) > 0:
-          return definitions
+      try:
+        result = r.json()
+        if len(result) > 0:
+          definitions = []
+          for item in result:
+            if (item['type'] == 'noun' and item['definition']):
+              definitions.append(item['definition'].lower())
+          if len(definitions) > 0:
+            return definitions
+      except:
+        pass
     # wiktionary
     try:
       parser = WiktionaryParser()

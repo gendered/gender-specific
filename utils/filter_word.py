@@ -47,11 +47,20 @@ def getEarlierIndex(femalePosition, malePosition):
     elif femalePosition is None:
         return 'male'
 
+def isAName(word):
+    path = os.getcwd() + '/utils/names.txt'
+    f = open(path, 'r')
+    terms = f.read().replace('\n', '')
+    rgex = re.compile(terms)
+    termInWord = rgex.search(definition)
+    if termInWord is not None:
+        return True
+    return False
 
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or not word[0].isalpha() and len(word) > 2:
+    if hasNumbers(word) or not word[0].isalpha() and len(word) > 2 and isAName(word):
         return False
     return True
 
@@ -64,7 +73,7 @@ def isValidDefinition(definition, startIndex, endIndex):
 
     # remove word with any of these terms
     def hasWordsToExclude():
-        path = os.getcwd() + '/utils/pattern.txt'
+        path = os.getcwd() + '/utils/exclude.txt'
         f = open(path, 'r')
         terms = f.read().replace('\n', '')
         rgex = re.compile(terms)

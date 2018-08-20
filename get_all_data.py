@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from wordnik import *
 from datamuse import datamuse
 import json
-import os
+import os, shutil
 import nltk
 from nltk.corpus import wordnet as wn
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -36,13 +36,19 @@ client = swagger.ApiClient(apiKey, apiUrl)
 
 femaleTermsArr = ['woman', 'female', 'girl', 'lady', 'women', 'mother', 'daughter', 'wife']
 maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
-
-with open('words/discard.json') as f:
-  discard = json.load(f)
-  discardSet = set(word for word in discard)
-
+discardSet = set()
 allWords = []
 wordSet = set()
+withGenderedTerm = []
+try:
+  with open('words/all-2.json') as f:
+    allWords = json.load(f)
+    wordSet = set(entry['word'] for entry in allWords)
+  with open('words/discard.json') as f:
+    discard = json.load(f)
+    discardSet = set(word for word in discard)
+except: 
+  pass
 
 # writes to a json file
 def writeToJson(path, set):
@@ -69,7 +75,7 @@ def addDefinition(entry, d):
   definitions = entry['definition']
   for definition in definitions:
     if definition == d:
-      break
+      return
   entry['definition'].append(definition)
 
 def processDefinitions(definitions, gender=None):
@@ -86,7 +92,7 @@ def processDefinitions(definitions, gender=None):
         termsFound = True
         if isValidDefinition(definition, startIndex, endIndex):
           validDefinitions.append(definition)
-  return (validDefinitions, termsFound)
+  return (validDefinitions, termsFound, gender)
 
 def processWord(word, definition, source, words, gender=None):
   if isinstance(definition, str):
@@ -102,10 +108,11 @@ def processWord(word, definition, source, words, gender=None):
   validDefinitions = processDefinitions(definition, gender)
   if len(validDefinitions[0]) > 0:
     wordSet.add(word)
-    addEntry(word, validDefinitions[0], gender, source, words)
+    addEntry(word, validDefinitions[0], validDefinitions[2], source, words)
   elif validDefinitions[1]:
+    addEntry(word, definition, gender, source, withGenderedTerm)
+  else:   
     discardSet.add(word)
-    addEntry(word, definition, gender, source, discard)
 
 # get words from wordnik
 def getWordnik():
@@ -174,7 +181,10 @@ def getWebster():
     definition = [(results[result]).lower()]
     word = result.lower()
     if (word not in wordSet and word not in discardSet and isValidWord(word)):
-      processWord(word, definition, source, allWords)
+      for ss in wn.synsets(word):
+        pos = ss.pos()
+        if ('n' in pos):
+          processWord(word, definition, source, allWords)
   print('webster done')
 
 def getGSFull():
@@ -201,15 +211,19 @@ def addTerms(terms, gender):
       addEntry(word, definition, gender, 'wordnik', allWords)
 
 # stuff only to run when not called via 'import' here
-# addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
 addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-getWordnik()
-writeToJson('words/wordnik', allWords)
-getWebster()
-writeToJson('words/webster', allWords)
-getDatamuse()
-writeToJson('words/datamuse', allWords)
-getGSFull()
+try:
+  getWordnik()
+  getWebster()
+  getDatamuse()
+  getGSFull()
+except:
+  writeToJson('words/all-2', allWords)
+  writeToJson('words/discard-2', list(discardSet))
+  writeToJson('words/withGenderedTerm', withGenderedTerm)
+
 print(len(allWords))
 writeToJson('words/all-2', allWords)
-writeToJson('words/discard-2', discard)
+writeToJson('words/discard-2', list(discardSet))
+writeToJson('words/withGenderedTerm', withGenderedTerm)

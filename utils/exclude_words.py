@@ -16,6 +16,7 @@ hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML,
        'Accept-Encoding': 'none',
        'Accept-Language': 'en-US,en;q=0.8',
        'Connection': 'keep-alive'}
+pattern = ''
 
 def listToRegexStr(list):
     return ('|'.join(r'\b' + item.lower() + r'\b' for item in list))
@@ -67,18 +68,38 @@ def scrapePage(urls, selector):
             print('URLError = ' + str(e.reason))
     return s
 
-pattern = r"""
-\bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|[\-]?cell[\-]?|
-\bman or woman\b|\bmen or women\b|\banimals\b|\bplant\b|gamete|
-\bsyndrome\b|\bsexes\b|\bmale and female\b|mammal|nucleus|"""
+def createNamePattern():
+    names = set()
+    with open('../data/female-human-names-en.json') as f:
+        data = json.load(f)
+        names.update(word.lower() for word in data)
+    with open('../data/male-human-names-en.json') as f:
+        data = json.load(f)
+        names.update(word.lower() for word in data)
+    with open('../data/first-names.json') as f:
+        data = json.load(f)
+        names.update(word.lower() for word in data)
+    f = open('names.txt','w')
+    f.write(listToRegexStr(list(names)))
+    f.close()
 
-#
-# with open('../data/animals.json') as f:
-#     animals = json.load(f)
-#     pattern += listToRegexStr(animals)
-#
-# pattern += getCollinsLists() + getWordnikLists()
-#
-# f = open('pattern.txt','w')
-# f.write(pattern)
-# f.close()
+def createExcludePattern():
+    pattern = r"""
+    # \bhormone\b|\bsperm\b|\banimal\b|\borgan\b|\bmale or female\b|[\-]?cell[\-]?|
+    # \bman or woman\b|\bmen or women\b|\banimals\b|\bplant\b|gamete|
+    # \bsyndrome\b|\bsexes\b|\bmale and female\b|mammal|nucleus|"""
+
+    with open('../data/animals.json') as f:
+        animals = json.load(f)
+        pattern += listToRegexStr(animals)
+    pattern += getCollinsLists() + getWordnikLists()
+    f = open('pattern.txt','w')
+    f.write(pattern)
+    f.close()
+
+with open('../data/greek_gods.json') as f:
+    gods = json.load(f)
+    print(listToRegexStr(gods))
+
+# createExcludePattern()
+createNamePattern()
