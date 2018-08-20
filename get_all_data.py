@@ -39,7 +39,7 @@ maleTermsArr = ['man', 'male', 'boy', 'men', 'son', 'father', 'husband']
 
 with open('words/discard.json') as f:
   discard = json.load(f)
-  discardSet = set(entry['word'] for entry in discard)
+  discardSet = set(word for word in discard)
 
 allWords = []
 wordSet = set()
@@ -50,6 +50,8 @@ def writeToJson(path, set):
       json.dump(list(set), outfile)
 
 def addEntry(word, definition, gender, source, array):
+  if isinstance(definition, str):
+    definition = []
   array.append({
     'word': word,
     'definition': definition,
@@ -63,11 +65,11 @@ def findWordInArray(word, arr):
       return entry
   return None
 
-def addDefinition(entry, definition):
-  defs = entry['definition']
-  for d in defs:
-    if d == definition:
-      continue
+def addDefinition(entry, d):
+  definitions = entry['definition']
+  for definition in definitions:
+    if definition == d:
+      break
   entry['definition'].append(definition)
 
 def processDefinitions(definitions, gender=None):
@@ -100,10 +102,10 @@ def processWord(word, definition, source, words, gender=None):
   validDefinitions = processDefinitions(definition, gender)
   if len(validDefinitions[0]) > 0:
     wordSet.add(word)
-    addEntry(word, validDefinitions, gender, source, words)
+    addEntry(word, validDefinitions[0], gender, source, words)
   elif validDefinitions[1]:
     discardSet.add(word)
-    addEntry(word, [definition], gender, source, discard)
+    addEntry(word, definition, gender, source, discard)
 
 # get words from wordnik
 def getWordnik():
@@ -117,7 +119,7 @@ def getWordnik():
       reverseDictionary = wordsApi.reverseDictionary(term,  includePartOfSpeech='noun', limit=10000).results
       for result in reverseDictionary:
         word = result.word.lower()
-        definition = (result.text).lower()
+        definition = result.text.lower()
         # if word is already in the set, add the new definition of the word
         if word in wordSet:
           entry = findWordInArray(word, words)
@@ -143,19 +145,20 @@ def getDatamuse():
       for result in results:
         word = result['word'].lower()
         # check if it's a noun
-        if ('tags' in result and 'n' in result['tags']):
-          if ('defs' in result):
-            definition = result['defs']
-          else:
-              definition = getWordDefinition(word)
-          if (definition != ' '):
-            if word in wordSet:
-              entry = findWordInArray(word, words)
-              if entry is not None:
-                addDefinition(entry, definition)
-              continue
-            elif (word not in wordSet and word not in discardSet and isValidWord(word)):
-              processWord(word, definition, source, words, gender)
+        if word not in discardSet:
+          if ('tags' in result and 'n' in result['tags']):
+            if ('defs' in result):
+              definition = result['defs']
+            else:
+                definition = getWordDefinition(word)
+            if (definition != ' ' and definition is not None and len(definition) > 0):
+              if word in wordSet:
+                entry = findWordInArray(word, words)
+                if entry is not None:
+                  addDefinition(entry, definition)
+                continue
+              elif (word not in wordSet and isValidWord(word)):
+                processWord(word, definition, source, words, gender)
     allWords.extend(words)
 
   callApi(femaleTermsArr, 'female')
@@ -186,7 +189,7 @@ def getGSFull():
     word = result.lower()
     if (word not in wordSet and word not in discardSet and isValidWord(word)):
       definition = getWordDefinition(word)
-      if (definition is not None and definition != ' '):
+      if (definition != ' ' and definition is not None and len(definition) > 0):
         processWord(word, definition, source, allWords)
   print ('gender specific done')
 
@@ -198,13 +201,15 @@ def addTerms(terms, gender):
       addEntry(word, definition, gender, 'wordnik', allWords)
 
 # stuff only to run when not called via 'import' here
-addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
+# addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
 addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
 getWordnik()
+writeToJson('words/wordnik', allWords)
 getWebster()
+writeToJson('words/webster', allWords)
 getDatamuse()
+writeToJson('words/datamuse', allWords)
 getGSFull()
-
 print(len(allWords))
 writeToJson('words/all-2', allWords)
 writeToJson('words/discard-2', discard)

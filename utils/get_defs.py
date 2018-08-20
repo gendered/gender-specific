@@ -31,46 +31,51 @@ def getWordDefinition(word):
 
     # wordnik dictionary
     wordApi = WordApi.WordApi(client)
-    try:
-      definitions = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=3))
-      if definitions is not None:
-        return [(definition.text).lower() for definition in definitions]
-    except:
-      meaningsList = vocabulary.meaning(word)
-      if meaningsList != False:
-        defs = json.loads(meaningsList)
-        if (len(defs) > 0):
-          definitions = []
-          for definition in defs:
-            d = re.sub('<[^<]+?>', '', definition.text)
+    definitions = (wordApi.getDefinitions(word, partOfSpeech='noun', limit=3))
+    if definitions is not None and len(definitions) > 0:
+      return [(definition.text).lower() for definition in definitions]
+    meaningsList = vocabulary.meaning(word)
+    if meaningsList != False:
+      defs = json.loads(meaningsList)
+      if (len(defs) > 0):
+        definitions = []
+        for definition in defs:
+          if definition['text']:
+            d = re.sub('<[^<]+?>', '', definition['text'])
             definitions.append(d.lower())
+        if len(definitions) > 0:
           return definitions
-    try:
-      # owlbot api
-      url = 'https://owlbot.info/api/v2/dictionary/' + word
-      r = requests.get(url)
+    # owlbot api
+    url = 'https://owlbot.info/api/v2/dictionary/' + word
+    r = requests.get(url)
+    if r is not None:
       result = (r.json())
-      definitions = []
-      for item in result:
-        if (item['type'] == 'noun' and item['definition']):
-          definitions.append(item['definition'].lower())
-      return definitions
-    except:
-      # wiktionary
+      if len(result) > 0:
+        definitions = []
+        for item in result:
+          if (item['type'] == 'noun' and item['definition']):
+            definitions.append(item['definition'].lower())
+        if len(definitions) > 0:
+          return definitions
+    # wiktionary
+    try:
       parser = WiktionaryParser()
       result = parser.fetch(word)
-      if len(result) > 0:
+      if result is not None:
         definition = result[0]['definitions']
-        if len(definition) > 0:
+        if definition and len(definition) > 0:
           definition = definition[0]
-          if definition['partOfSpeech'] == 'noun':
-            defs = definition['text'].lower().split('\n')
-            if len(defs) > 1:
-              return defs[0:2]
-            return defs
+          if 'partOfSpeech' in definition:
+            if definition['partOfSpeech'] == 'noun':
+              defs = definition['text'].lower().split('\n')
+              if len(defs) > 1:
+                return defs[0:2]
+              elif len(defs) == 1:
+                return defs
+    except:
+      return ' '
     return ' '
-
-  if not isinstance(word, str):
+  if not isinstance(word, str) or word is None:
     return
   searches = []
   # for example, look for beauty_queen, beauty-queen, beauty queen.
