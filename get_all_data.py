@@ -210,18 +210,12 @@ def addTerms(terms, gender):
       wordSet.add(word)
       addEntry(word, definition, gender, 'wordnik', allWords)
 
-# stuff only to run when not called via 'import' here
 addTerms(['woman', 'girl', 'lady', 'mother', 'daughter', 'wife'], 'female')
 addTerms(['man', 'boy', 'son', 'father', 'husband'], 'male')
-try:
-  getWordnik()
-  getWebster()
-  getDatamuse()
-  getGSFull()
-except:
-  writeToJson('words/all-2', allWords)
-  writeToJson('words/discard-2', list(discardSet))
-  writeToJson('words/withGenderedTerm', withGenderedTerm)
+getWordnik()
+getWebster()
+getDatamuse()
+getGSFull()
 
 print(len(allWords))
 writeToJson('words/all-2', allWords)

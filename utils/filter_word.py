@@ -52,7 +52,7 @@ def isAName(word):
     f = open(path, 'r')
     terms = f.read().replace('\n', '')
     rgex = re.compile(terms)
-    termInWord = rgex.search(definition)
+    termInWord = rgex.search(word)
     if termInWord is not None:
         return True
     return False
@@ -60,7 +60,7 @@ def isAName(word):
 def isValidWord(word):
     def hasNumbers(inputString):
         return any(char.isdigit() for char in inputString)
-    if hasNumbers(word) or not word[0].isalpha() and len(word) > 2 and isAName(word):
+    if hasNumbers(word) or not word[0].isalpha() or len(word) < 2 or isAName(word):
         return False
     return True
 
@@ -138,7 +138,7 @@ def isValidDefinition(definition, startIndex, endIndex):
                 return True
         return False
     
-    if not startIndex > 100 and not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
+    if not startIndex > 90 and not hasWordsToExclude() and not isTermPossessive() and sentenceIsRightStructure():
         return True
     else:
         return False

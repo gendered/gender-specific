@@ -97,9 +97,9 @@ def createExcludePattern():
     f.write(pattern)
     f.close()
 
-with open('../data/greek_gods.json') as f:
-    gods = json.load(f)
-    print(listToRegexStr(gods))
+# with open('../data/greek_gods.json') as f:
+#     gods = json.load(f)
+#     print(listToRegexStr(gods))
 
 # createExcludePattern()
-createNamePattern()
+# createNamePattern()
